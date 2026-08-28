@@ -3,15 +3,13 @@
     x:Class="Navis.WinUI.Sample.Views.MainShell.ShellPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:nav="using:Navis.WinUI"
-    xmlns:views="using:Navis.WinUI.Sample.Views"
     xmlns:mainShell="using:Navis.WinUI.Sample.Views.MainShell"
-    nav:TitlebarProperties.CurrentNavigationFrame="{x:Bind ContentFrame}"
-    nav:TitlebarProperties.CurrentNavigationView="{x:Bind Navigation}">
+    xmlns:nav="using:Navis.WinUI">
 
     <NavigationView
         x:Name="Navigation"
         nav:NavigationViewProperties.Frame="{x:Bind ContentFrame}"
+        nav:TitleBarNavigation.IsPaneTarget="true"
         IsBackButtonVisible="Collapsed"
         IsSettingsVisible="False"
         OpenPaneLength="200"
@@ -34,6 +32,7 @@
         <Frame
             x:Name="ContentFrame"
             nav:NavigationHost.InitialPage="{nav:XamlType TypeName=mainShell:HomePage}"
-            nav:NavigationHost.IsEnabled="True" />
+            nav:NavigationHost.IsEnabled="True"
+            nav:TitleBarNavigation.IsBackTarget="true" />
     </NavigationView>
 </Page>

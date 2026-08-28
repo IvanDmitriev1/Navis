@@ -9,7 +9,7 @@ public sealed partial class MainWindow : Window
         InitializeComponent();
 
         ExtendsContentIntoTitleBar = true;
-        SetTitleBar(TitleBar);
-        TitlebarProperties.SetTargetTitleBar(TitleBar);
+        SetTitleBar(TitleBar); 
+        TitleBarNavigation.SetTargetTitleBar(TitleBar);
     }
 }
