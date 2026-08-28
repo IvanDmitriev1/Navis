@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/samples/">
+    <Project Path="samples/Navis.WinUI.Sample/Navis.WinUI.Sample.csproj" Id="e24b1cc6-2149-4a48-a69b-d82f87501635">
+      <Platform Project="x64" />
+      <Deploy />
+    </Project>
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Navis.WinUI/Navis.WinUI.csproj" Id="f74eb601-54e7-400c-9a91-055b85181809" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Navis.WinUI.Tests/Navis.WinUI.Tests.csproj" />
+  </Folder>
+</Solution>

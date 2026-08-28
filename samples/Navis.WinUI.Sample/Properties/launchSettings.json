@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Navis.WinUI.Sample (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "Navis.WinUI.Sample (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

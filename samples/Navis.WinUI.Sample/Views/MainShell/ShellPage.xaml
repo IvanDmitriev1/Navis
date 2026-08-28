@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="Navis.WinUI.Sample.Views.MainShell.ShellPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:nav="using:Navis.WinUI"
+    xmlns:views="using:Navis.WinUI.Sample.Views"
+    xmlns:mainShell="using:Navis.WinUI.Sample.Views.MainShell"
+    nav:TitlebarProperties.CurrentNavigationFrame="{x:Bind ContentFrame}"
+    nav:TitlebarProperties.CurrentNavigationView="{x:Bind Navigation}">
+
+    <NavigationView
+        x:Name="Navigation"
+        nav:NavigationViewProperties.Frame="{x:Bind ContentFrame}"
+        IsBackButtonVisible="Collapsed"
+        IsSettingsVisible="False"
+        OpenPaneLength="200"
+        PaneDisplayMode="Left">
+        <NavigationView.MenuItems>
+            <NavigationViewItem
+                nav:Navigate.To="{nav:XamlType TypeName=mainShell:HomePage}"
+                Content="Home"
+                Icon="Home" />
+            <NavigationViewItem
+                nav:Navigate.To="{nav:XamlType TypeName=mainShell:SearchPage}"
+                Content="Search"
+                Icon="Find" />
+            <NavigationViewItem
+                nav:Navigate.To="{nav:XamlType TypeName=mainShell:LibraryPage}"
+                Content="Library"
+                Icon="Library" />
+        </NavigationView.MenuItems>
+
+        <Frame
+            x:Name="ContentFrame"
+            nav:NavigationHost.InitialPage="{nav:XamlType TypeName=mainShell:HomePage}"
+            nav:NavigationHost.IsEnabled="True" />
+    </NavigationView>
+</Page>

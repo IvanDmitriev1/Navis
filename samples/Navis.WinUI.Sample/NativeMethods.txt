@@ -1,0 +1,4 @@
+CreateEvent
+SetEvent
+AllowSetForegroundWindow
+CoWaitForMultipleObjects

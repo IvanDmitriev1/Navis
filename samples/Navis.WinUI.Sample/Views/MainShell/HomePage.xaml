@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="Navis.WinUI.Sample.Views.MainShell.HomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:nav="using:Navis.WinUI"
+    xmlns:views="using:Navis.WinUI.Sample.Views" 
+    xmlns:mainShell="using:Navis.WinUI.Sample.Views.MainShell"
+    NavigationCacheMode="Required">
+
+    <StackPanel
+        MaxWidth="720"
+        Padding="48"
+        HorizontalAlignment="Left"
+        Spacing="16">
+        <TextBlock
+            Style="{StaticResource TitleTextBlockStyle}"
+            Text="Home" />
+        <TextBlock
+            Text="Navigation is Page-first. This cached page is revisited through the native Frame journal."
+            TextWrapping="Wrap" />
+        <Button
+            AutomationProperties.Name="Open search page"
+            Content="Open Search"
+            nav:Navigate.To="{nav:XamlType TypeName=mainShell:SearchPage}" />
+    </StackPanel>
+</Page>
