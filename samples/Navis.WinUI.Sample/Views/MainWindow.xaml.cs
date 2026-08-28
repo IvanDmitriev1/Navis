@@ -10,6 +10,5 @@ public sealed partial class MainWindow : Window
 
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(TitleBar); 
-        TitleBarNavigation.SetTargetTitleBar(TitleBar);
     }
 }

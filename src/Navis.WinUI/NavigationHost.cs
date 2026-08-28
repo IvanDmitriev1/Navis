@@ -39,15 +39,22 @@ public static partial class NavigationHost
         if (!newValue)
             return;
 
-        frame.Loaded += OnFrameLoaded;
-
         if (frame.IsLoaded)
         {
             Initialize(frame);
         }
+        else
+        {
+            frame.Loaded += OnFrameLoaded;
+        }
     }
 
-    private static void OnFrameLoaded(object sender, RoutedEventArgs e) => Initialize((Frame)sender);
+    private static void OnFrameLoaded(object sender, RoutedEventArgs e)
+    {
+        var frame = (Frame)sender;
+        frame.Loaded -= OnFrameLoaded;
+        Initialize(frame);
+    }
 
     private static void Initialize(Frame frame)
     {

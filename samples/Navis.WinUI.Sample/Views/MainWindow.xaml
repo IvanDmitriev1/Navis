@@ -20,7 +20,10 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TitleBar x:Name="TitleBar" Grid.Row="0" />
+        <TitleBar
+            x:Name="TitleBar"
+            Grid.Row="0"
+            nav:TitleBarNavigation.IsHost="True" />
 
         <Frame
             x:Name="RootFrame"
