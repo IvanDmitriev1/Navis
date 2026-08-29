@@ -212,7 +212,7 @@ public static partial class TitleBarNavigation
             return;
         }
 
-        NavigationHost.GetFrameNavigationInstance(frame).Navigate(NavigationKind.Back);
+        NavigationHost.GetFrameNavigationInstance(frame).NavigateBack();
     }
 
     private static void OnPaneToggleRequested(TitleBar sender, object args)

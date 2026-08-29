@@ -16,10 +16,14 @@ public interface INavigation
     bool CanGoForward { get; }
 
     /// <summary>
-    /// Performs a journal operation. This overload accepts only
-    /// <see cref="NavigationKind.Back"/> and <see cref="NavigationKind.Forward"/>.
+    /// Navigates to the previous page in the journal.
     /// </summary>
-    void Navigate(NavigationKind kind);
+    void NavigateBack();
+
+    /// <summary>
+    /// Navigates to the next page in the journal.
+    /// </summary>
+    void NavigateForward();
 
     /// <summary>
     /// Navigates to a page type without a parameter.

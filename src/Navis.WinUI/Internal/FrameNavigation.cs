@@ -2,8 +2,20 @@ using System.Diagnostics;
 
 namespace Navis.WinUI.Internal;
 
-internal sealed class FrameNavigation(Frame currentFrame, INavigation? parent) : INavigation
+internal sealed class FrameNavigation : INavigation, IDisposable
 {
+    public FrameNavigation(Frame currentFrame, INavigation? parent)
+    {
+        _currentFrame = currentFrame;
+        Parent = parent;
+
+        currentFrame.Navigating += OnFrameNavigating;
+        currentFrame.Navigated += OnFrameNavigated;
+    }
+
+    private readonly Frame _currentFrame;
+    private bool _disposed;
+
 
     public INavigation Root
     {
@@ -19,32 +31,48 @@ internal sealed class FrameNavigation(Frame currentFrame, INavigation? parent) :
         }
     }
 
-    public INavigation? Parent => parent;
+    public INavigation? Parent { get; }
 
-    public Type? CurrentPageType => currentFrame.CurrentSourcePageType;
+    public Type? CurrentPageType => _currentFrame.CurrentSourcePageType;
 
-    public bool CanGoBack => currentFrame.CanGoBack;
-    public bool CanGoForward => currentFrame.CanGoForward;
+    public bool CanGoBack => _currentFrame.CanGoBack;
+    public bool CanGoForward => _currentFrame.CanGoForward;
 
-    public void Navigate(NavigationKind kind)
+    public void Dispose()
     {
-        if (kind is not NavigationKind.Back and not NavigationKind.Forward)
-        {
-            throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
-        }
+        if (_disposed)
+            return;
 
-        NavigatorActivation.Push(currentFrame);
+        _currentFrame.Navigating -= OnFrameNavigating;
+        _currentFrame.Navigated -= OnFrameNavigated;
+        _disposed = true;
+    }
+
+    public void NavigateBack()
+    {
+        NavigatorActivation.Push(_currentFrame);
 
         try
         {
-            if (kind == NavigationKind.Back)
-                currentFrame.GoBack();
-            else
-                currentFrame.GoForward();
+            _currentFrame.GoBack();
         }
         finally
         {
-            NavigatorActivation.Pop(currentFrame);
+            NavigatorActivation.Pop(_currentFrame);
+        }
+    }
+
+    public void NavigateForward()
+    {
+        NavigatorActivation.Push(_currentFrame);
+
+        try
+        {
+            _currentFrame.GoForward();
+        }
+        finally
+        {
+            NavigatorActivation.Pop(_currentFrame);
         }
     }
 
@@ -69,15 +97,15 @@ internal sealed class FrameNavigation(Frame currentFrame, INavigation? parent) :
                 return;
 
             case NavigationKind.Replace:
-                if (NavigateTo(pageType, parameter) && currentFrame.BackStack.Count > 0)
-                    currentFrame.BackStack.RemoveAt(currentFrame.BackStack.Count - 1);
+                if (NavigateTo(pageType, parameter) && _currentFrame.BackStack.Count > 0)
+                    _currentFrame.BackStack.RemoveAt(_currentFrame.BackStack.Count - 1);
                 return;
 
             case NavigationKind.Reset:
                 if (NavigateTo(pageType, parameter))
                 {
-                    currentFrame.BackStack.Clear();
-                    currentFrame.ForwardStack.Clear();
+                    _currentFrame.BackStack.Clear();
+                    _currentFrame.ForwardStack.Clear();
                 }
                 return;
 
@@ -93,17 +121,27 @@ internal sealed class FrameNavigation(Frame currentFrame, INavigation? parent) :
 
     private bool NavigateTo(Type pageType, object? parameter)
     {
-        NavigatorActivation.Push(currentFrame);
+        NavigatorActivation.Push(_currentFrame);
 
         try
         {
-            var result = currentFrame.Navigate(pageType, parameter);
+            var result = _currentFrame.Navigate(pageType, parameter);
             Debug.Assert(result);
             return result;
         }
         finally
         {
-            NavigatorActivation.Pop(currentFrame);
+            NavigatorActivation.Pop(_currentFrame);
         }
+    }
+
+    private void OnFrameNavigating(object sender, NavigatingCancelEventArgs args)
+    {
+
+    }
+
+    private void OnFrameNavigated(object sender, NavigationEventArgs args)
+    {
+
     }
 }

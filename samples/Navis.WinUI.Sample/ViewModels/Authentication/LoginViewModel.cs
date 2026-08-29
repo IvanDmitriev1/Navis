@@ -5,16 +5,21 @@ using Navis.WinUI.Sample.Views.MainShell;
 
 namespace Navis.WinUI.Sample.ViewModels.Authentication;
 
-public partial class LoginViewModel(INavigation navigation) : ObservableObject, INavigationAware, INavigationLeavingAware
+public partial class LoginViewModel(INavigation navigation) : ObservableObject, INavigationAware, INavigationGuard
 {
-    public ValueTask OnNavigatedToAsync(NavigationContext context)
+    public ValueTask OnNavigatedToAsync(NavigationContext context, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        return ValueTask.CompletedTask;
     }
 
-    public ValueTask<NavigationDecision> OnNavigatingFromAsync(NavigationContext context, CancellationToken cancellationToken)
+    public ValueTask OnNavigatedFromAsync(NavigationContext context, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        return ValueTask.CompletedTask;
+    }
+
+    public ValueTask<NavigationDecision> CanNavigateFromAsync(NavigationContext context, CancellationToken cancellationToken)
+    {
+        return ValueTask.FromResult(NavigationDecision.Proceed);
     }
 
     [RelayCommand]

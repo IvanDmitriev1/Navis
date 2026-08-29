@@ -66,6 +66,15 @@ public partial class Navigate
                 break;
 
             case NavigationKind.Back:
+                if (destinationPageType is not null)
+                {
+                    throw new InvalidOperationException(
+                        $"Navigate.Kind '{kind}' does not accept Navigate.To.");
+                }
+
+                navigation.NavigateBack();
+                break;
+
             case NavigationKind.Forward:
                 if (destinationPageType is not null)
                 {
@@ -73,7 +82,7 @@ public partial class Navigate
                         $"Navigate.Kind '{kind}' does not accept Navigate.To.");
                 }
 
-                navigation.Navigate(kind);
+                navigation.NavigateForward();
                 break;
 
             default:

@@ -37,7 +37,15 @@ public static partial class NavigationHost
         frame.Loaded -= OnFrameLoaded;
 
         if (!newValue)
+        {
+            if (frame.GetValue(InstanceProperty) is FrameNavigation navigation)
+            {
+                navigation.Dispose();
+                frame.ClearValue(InstanceProperty);
+            }
+
             return;
+        }
 
         if (frame.IsLoaded)
         {
