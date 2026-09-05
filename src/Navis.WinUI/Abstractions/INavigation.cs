@@ -3,6 +3,13 @@ namespace Navis.WinUI.Abstractions;
 /// <summary>
 /// Starts navigation operations for one navigation-host Frame.
 /// </summary>
+/// <remarks>
+/// Navigation requests return after validation and are completed asynchronously when guards or
+/// navigation-aware callbacks are asynchronous. Requests made while another request is in flight
+/// are ignored. Guards run deepest-first before the native navigation commits; aware callbacks run
+/// deepest-first on departure and in page order on arrival. Calls must be made on the Frame's UI
+/// thread.
+/// </remarks>
 public interface INavigation
 {
     INavigation Root { get; }
@@ -16,16 +23,6 @@ public interface INavigation
     bool CanGoForward { get; }
 
     /// <summary>
-    /// Navigates to the previous page in the journal.
-    /// </summary>
-    void NavigateBack();
-
-    /// <summary>
-    /// Navigates to the next page in the journal.
-    /// </summary>
-    void NavigateForward();
-
-    /// <summary>
     /// Navigates to a page type without a parameter.
     /// </summary>
     void Navigate<TPage>(NavigationKind kind = NavigationKind.Navigate)
@@ -36,4 +33,14 @@ public interface INavigation
     /// </summary>
     void Navigate<TPage, TParameter>(TParameter parameter, NavigationKind kind = NavigationKind.Navigate)
         where TPage : Page;
+
+    /// <summary>
+    /// Navigates to the previous page in the journal.
+    /// </summary>
+    void NavigateBack();
+
+    /// <summary>
+    /// Navigates to the next page in the journal.
+    /// </summary>
+    void NavigateForward();
 }

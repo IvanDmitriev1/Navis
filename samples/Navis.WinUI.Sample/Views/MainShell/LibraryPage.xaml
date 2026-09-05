@@ -19,6 +19,6 @@
         <Button
             AutomationProperties.Name="Go back"
             Content="Back"
-            nav:Navigate.Kind="Back" />
+            Click="OnBackClick" />
     </StackPanel>
 </Page>

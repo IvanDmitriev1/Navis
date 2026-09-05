@@ -9,6 +9,7 @@ public sealed partial class LoginPage : Page
     public LoginPage()
     {
         InitializeComponent();
+
         ViewModel = App.Current.GetRequiredService<LoginViewModel>();
         DataContext = ViewModel;
     }

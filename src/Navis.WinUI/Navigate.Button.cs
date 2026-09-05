@@ -6,15 +6,11 @@ namespace Navis.WinUI;
 
 public partial class Navigate
 {
-    static partial void OnToChanged(
-        DependencyObject dependencyObject,
-        Type? oldValue,
-        Type? newValue) => UpdateClickHandler(dependencyObject);
+    static partial void OnToChanged(DependencyObject dependencyObject) =>
+        UpdateClickHandler(dependencyObject);
 
-    static partial void OnKindChanged(
-        DependencyObject dependencyObject,
-        NavigationKind oldValue,
-        NavigationKind newValue) => UpdateClickHandler(dependencyObject);
+    static partial void OnKindChanged(DependencyObject dependencyObject) =>
+        UpdateClickHandler(dependencyObject);
 
     private static void UpdateClickHandler(DependencyObject dependencyObject)
     {
@@ -23,8 +19,7 @@ public partial class Navigate
 
         button.Click -= OnButtonClick;
 
-        var kind = GetKind(button);
-        if (GetTo(button) is not null || kind is NavigationKind.Back or NavigationKind.Forward)
+        if (GetTo(button) is not null)
         {
             button.Click += OnButtonClick;
         }
@@ -63,26 +58,6 @@ public partial class Navigate
                 }
 
                 navigation.Navigate(destinationPageType, parameter, kind);
-                break;
-
-            case NavigationKind.Back:
-                if (destinationPageType is not null)
-                {
-                    throw new InvalidOperationException(
-                        $"Navigate.Kind '{kind}' does not accept Navigate.To.");
-                }
-
-                navigation.NavigateBack();
-                break;
-
-            case NavigationKind.Forward:
-                if (destinationPageType is not null)
-                {
-                    throw new InvalidOperationException(
-                        $"Navigate.Kind '{kind}' does not accept Navigate.To.");
-                }
-
-                navigation.NavigateForward();
                 break;
 
             default:

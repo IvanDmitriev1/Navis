@@ -2,5 +2,5 @@
 
 public interface INavigationGuard
 {
-    ValueTask<NavigationDecision> CanNavigateFromAsync(NavigationContext context, CancellationToken cancellationToken);
+    ValueTask<NavigationDecision> CanNavigateFromAsync(CancellationToken cancellationToken);
 }

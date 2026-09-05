@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
 using Navis.WinUI.Extensions;
 using Navis.WinUI.Sample.ViewModels.Authentication;
+using Navis.WinUI.Sample.ViewModels.MainShell;
 
 namespace Navis.WinUI.Sample;
 
@@ -25,6 +26,7 @@ public partial class App : Application, IServiceProvider
         _serviceProvider = new ServiceCollection()
             .AddNavisNavigation()
             .AddTransient<LoginViewModel>()
+            .AddTransient<SearchPageViewModel>()
             .BuildServiceProvider();
     }
 

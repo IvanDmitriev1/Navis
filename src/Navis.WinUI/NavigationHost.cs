@@ -22,7 +22,7 @@ public static partial class NavigationHost
         if (frame.GetValue(InstanceProperty) is FrameNavigation instance)
             return instance;
 
-        INavigation? parentNavigation = frame.FindVisualParent<Frame>() is { } parent
+        FrameNavigation? parentNavigation = frame.FindVisualParent<Frame>() is { } parent
             ? GetFrameNavigationInstance(parent)
             : null;
 
@@ -32,23 +32,33 @@ public static partial class NavigationHost
         return instance;
     }
 
-    static partial void OnIsEnabledChanged(Frame frame, bool newValue)
+    internal static bool TryGetFrameNavigationInstance(Frame frame, out FrameNavigation instance)
+    {
+        if (GetIsEnabled(frame) &&
+            frame.GetValue(InstanceProperty) is FrameNavigation { IsDisposed: false } navigation)
+        {
+            instance = navigation;
+            return true;
+        }
+
+        instance = null!;
+        return false;
+    }
+
+    static async partial void OnIsEnabledChanged(Frame frame, bool newValue)
     {
         frame.Loaded -= OnFrameLoaded;
+        frame.Unloaded -= OnFrameUnloaded;
 
         if (!newValue)
         {
-            if (frame.GetValue(InstanceProperty) is FrameNavigation navigation)
-            {
-                navigation.Dispose();
-                frame.ClearValue(InstanceProperty);
-            }
-
+            await UninitializeAsync(frame);
             return;
         }
 
         if (frame.IsLoaded)
         {
+            frame.Unloaded += OnFrameUnloaded;
             Initialize(frame);
         }
         else
@@ -61,17 +71,52 @@ public static partial class NavigationHost
     {
         var frame = (Frame)sender;
         frame.Loaded -= OnFrameLoaded;
+
+        if (!GetIsEnabled(frame))
+            return;
+
+        frame.Unloaded -= OnFrameUnloaded;
+        frame.Unloaded += OnFrameUnloaded;
         Initialize(frame);
+    }
+
+    private static async void OnFrameUnloaded(object sender, RoutedEventArgs e)
+    {
+        var frame = (Frame)sender;
+        frame.Loaded -= OnFrameLoaded;
+        frame.Unloaded -= OnFrameUnloaded;
+
+        try
+        {
+            await UninitializeAsync(frame);
+        }
+        finally
+        {
+            if (GetIsEnabled(frame))
+                frame.Loaded += OnFrameLoaded;
+        }
     }
 
     private static void Initialize(Frame frame)
     {
         var navigation = GetFrameNavigationInstance(frame);
-        
+
+        if (frame.Content is not null)
+            return;
+
         var initialPage = GetInitialPage(frame);
         if (initialPage is null)
             return;
 
         navigation.Navigate(initialPage);
+    }
+
+    private static async ValueTask UninitializeAsync(Frame frame)
+    {
+        if (frame.GetValue(InstanceProperty) is not FrameNavigation navigation)
+            return;
+
+        frame.ClearValue(InstanceProperty);
+        await navigation.DisposeAsync();
     }
 }

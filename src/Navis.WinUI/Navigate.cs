@@ -6,5 +6,5 @@ namespace Navis.WinUI;
 [AttachedDependencyProperty<NavigationTarget, DependencyObject>("Target", DefaultValue = NavigationTarget.Current)]
 public static partial class Navigate
 {
-    
+
 }

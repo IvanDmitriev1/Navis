@@ -1,21 +1,26 @@
-using System.Diagnostics;
+using Navis.WinUI.Extensions;
 
 namespace Navis.WinUI.Internal;
 
-internal sealed class FrameNavigation : INavigation, IDisposable
+internal sealed class FrameNavigation : INavigation, IAsyncDisposable
 {
-    public FrameNavigation(Frame currentFrame, INavigation? parent)
+    public FrameNavigation(Frame currentFrame, FrameNavigation? parent)
     {
         _currentFrame = currentFrame;
-        Parent = parent;
+        _parent = parent;
 
-        currentFrame.Navigating += OnFrameNavigating;
-        currentFrame.Navigated += OnFrameNavigated;
+        _parent?.AttachChild(this);
+
+        _currentFrame.Navigating += CurrentFrameOnNavigating;
+        _currentFrame.Navigated += CurrentFrameOnNavigated;
     }
 
+    private readonly CancellationTokenSource _cts = new();
     private readonly Frame _currentFrame;
-    private bool _disposed;
+    private readonly FrameNavigation? _parent;
+    private FrameNavigation? _child = null;
 
+    public bool IsDisposed { get; private set; }
 
     public INavigation Root
     {
@@ -31,117 +36,242 @@ internal sealed class FrameNavigation : INavigation, IDisposable
         }
     }
 
-    public INavigation? Parent { get; }
+    public INavigation? Parent => _parent;
 
-    public Type? CurrentPageType => _currentFrame.CurrentSourcePageType;
-
-    public bool CanGoBack => _currentFrame.CanGoBack;
-    public bool CanGoForward => _currentFrame.CanGoForward;
-
-    public void Dispose()
+    public Type? CurrentPageType
     {
-        if (_disposed)
+        get
+        {
+            EnsureCanOperate();
+            return _currentFrame.CurrentSourcePageType;
+        }
+    }
+
+    public bool CanGoBack
+    {
+        get
+        {
+            EnsureCanOperate();
+            return _currentFrame.CanGoBack;
+        }
+    }
+
+    public bool CanGoForward
+    {
+        get
+        {
+            EnsureCanOperate();
+            return _currentFrame.CanGoBack;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        EnsureUiThread();
+
+        if (IsDisposed)
             return;
 
-        _currentFrame.Navigating -= OnFrameNavigating;
-        _currentFrame.Navigated -= OnFrameNavigated;
-        _disposed = true;
-    }
+        IsDisposed = true;
+        _parent?.DetachChild(this);
 
-    public void NavigateBack()
-    {
-        NavigatorActivation.Push(_currentFrame);
+        _currentFrame.Navigating -= CurrentFrameOnNavigating;
+        _currentFrame.Navigated -= CurrentFrameOnNavigated;
 
-        try
-        {
-            _currentFrame.GoBack();
-        }
-        finally
-        {
-            NavigatorActivation.Pop(_currentFrame);
-        }
-    }
-
-    public void NavigateForward()
-    {
-        NavigatorActivation.Push(_currentFrame);
+        _cts.Cancel();
 
         try
         {
-            _currentFrame.GoForward();
+            var target = _currentFrame.GetNavigationTarget();
+            if (target is INavigationAware navigationAware)
+            {
+                await navigationAware.OnNavigatedFromAsync(CancellationToken.None);
+            }
         }
         finally
         {
-            NavigatorActivation.Pop(_currentFrame);
+            _cts.Dispose();
         }
     }
 
     public void Navigate<TPage>(NavigationKind kind = NavigationKind.Navigate)
-        where TPage : Page
-    {
-        Navigate(typeof(TPage), null, kind);
-    }
+        where TPage : Page =>
+        _ = StartNavigation(typeof(TPage), null, kind);
 
     public void Navigate<TPage, TParameter>(TParameter parameter, NavigationKind kind = NavigationKind.Navigate)
-        where TPage : Page
+        where TPage : Page =>
+        _ = StartNavigation(typeof(TPage), parameter, kind);
+
+    public void NavigateBack()
     {
-        Navigate(typeof(TPage), parameter, kind);
+        if (!_currentFrame.CanGoBack)
+            throw new InvalidOperationException("Cannot navigate back because there is no page in the back stack.");
+
+        _ = StartNavigation(
+            _currentFrame.BackStack[^1].SourcePageType,
+            NavigationKind.Navigate,
+            static frame => frame.GoBack());
     }
 
-    public void Navigate(Type pageType, object? parameter = null, NavigationKind kind = NavigationKind.Navigate)
+    public void NavigateForward()
     {
-        switch (kind)
+        if (!_currentFrame.CanGoForward)
+            throw new InvalidOperationException("Cannot navigate forward because there is no page in the forward stack.");
+
+        _ = StartNavigation(
+            _currentFrame.ForwardStack[^1].SourcePageType,
+            NavigationKind.Navigate,
+            static frame => frame.GoForward());
+    }
+
+    internal void Navigate(
+        Type pageType,
+        object? parameter = null,
+        NavigationKind kind = NavigationKind.Navigate) =>
+        _ = StartNavigation(pageType, parameter, kind);
+
+    private void AttachChild(FrameNavigation child)
+    {
+        _child = child;
+    }
+
+    private void DetachChild(FrameNavigation child)
+    {
+        if (ReferenceEquals(_child, child))
         {
-            case NavigationKind.Navigate:
-                NavigateTo(pageType, parameter);
-                return;
-
-            case NavigationKind.Replace:
-                if (NavigateTo(pageType, parameter) && _currentFrame.BackStack.Count > 0)
-                    _currentFrame.BackStack.RemoveAt(_currentFrame.BackStack.Count - 1);
-                return;
-
-            case NavigationKind.Reset:
-                if (NavigateTo(pageType, parameter))
-                {
-                    _currentFrame.BackStack.Clear();
-                    _currentFrame.ForwardStack.Clear();
-                }
-                return;
-
-            case NavigationKind.Back:
-            case NavigationKind.Forward:
-                throw new ArgumentException(null, nameof(kind));
-
-            default:
-                throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
+            _child = null;
         }
     }
 
-
-    private bool NavigateTo(Type pageType, object? parameter)
+    private async Task StartNavigation(Type pageType, object? parameter, NavigationKind kind)
     {
+        EnsureCanOperate();
         NavigatorActivation.Push(_currentFrame);
+
+        var source = _currentFrame.GetNavigationTarget();
+        bool committed;
 
         try
         {
-            var result = _currentFrame.Navigate(pageType, parameter);
-            Debug.Assert(result);
-            return result;
+            if (!await CanNavigate())
+                return;
+
+            committed = NavigateTo(pageType, parameter, kind);
         }
         finally
         {
             NavigatorActivation.Pop(_currentFrame);
         }
+
+        if (!committed)
+            return;
+
+        if (source is INavigationAware sourceAware)
+        {
+            await sourceAware.OnNavigatedFromAsync(_cts.Token);
+        }
     }
 
-    private void OnFrameNavigating(object sender, NavigatingCancelEventArgs args)
+    private async Task StartNavigation(Type pageType, NavigationKind kind, Action<Frame> action)
     {
+        EnsureCanOperate();
+        NavigatorActivation.Push(_currentFrame);
 
+        var source = _currentFrame.GetNavigationTarget();
+
+        try
+        {
+            if (!await CanNavigate())
+                return;
+
+            action.Invoke(_currentFrame);
+        }
+        finally
+        {
+            NavigatorActivation.Pop(_currentFrame);
+        }
+
+        if (source is INavigationAware sourceAware)
+        {
+            await sourceAware.OnNavigatedFromAsync(_cts.Token);
+        }
     }
 
-    private void OnFrameNavigated(object sender, NavigationEventArgs args)
+    private async Task<bool> CanNavigate()
     {
+        if (_child is not null && !await _child.CanNavigate())
+        {
+            return false;
+        }
 
+        return await _currentFrame.CanNavigate(_cts.Token);
+    }
+
+    private bool NavigateTo(Type pageType, object? parameter, NavigationKind kind)
+    {
+        bool committed = _currentFrame.Navigate(
+            pageType,
+            parameter);
+
+        if (!committed)
+            return false;
+
+        switch (kind)
+        {
+            case NavigationKind.Navigate:
+                break;
+
+            case NavigationKind.Replace:
+                if (_currentFrame.BackStack.Count > 0)
+                {
+                    _currentFrame.BackStack.RemoveAt(
+                        _currentFrame.BackStack.Count - 1);
+                }
+
+                break;
+
+            case NavigationKind.Reset:
+                _currentFrame.BackStack.Clear();
+                _currentFrame.ForwardStack.Clear();
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException(
+                    nameof(kind), kind, null);
+        }
+
+        return true;
+    }
+
+    private void CurrentFrameOnNavigating(object sender, NavigatingCancelEventArgs e)
+    {
+        
+    }
+
+    private void CurrentFrameOnNavigated(object sender, NavigationEventArgs e)
+    {
+        if (e.Content is not FrameworkElement { DataContext: INavigationAware navigationAware })
+        {
+            return;
+        }
+
+        navigationAware.OnNavigatedToAsync(e.Parameter, _cts.Token);
+    }
+
+    private void EnsureCanOperate()
+    {
+        EnsureUiThread();
+
+        if (IsDisposed)
+            throw new ObjectDisposedException(nameof(FrameNavigation));
+    }
+
+    private void EnsureUiThread()
+    {
+        if (!_currentFrame.DispatcherQueue.HasThreadAccess)
+        {
+            throw new InvalidOperationException(
+                "Frame navigation must be used from the frame's UI thread.");
+        }
     }
 }

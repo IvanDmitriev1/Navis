@@ -4,7 +4,5 @@ public enum NavigationKind : byte
 {
     Navigate,
     Replace,
-    Reset,
-    Back,
-    Forward
+    Reset
 }

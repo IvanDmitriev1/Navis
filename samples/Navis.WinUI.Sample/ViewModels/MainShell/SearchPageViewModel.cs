@@ -1,12 +1,15 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using Navis.WinUI.Abstractions;
-using Navis.WinUI.Sample.Views.MainShell;
 
-namespace Navis.WinUI.Sample.ViewModels.Authentication;
+namespace Navis.WinUI.Sample.ViewModels.MainShell;
 
-public partial class LoginViewModel(INavigation navigation) : ObservableObject, INavigationAware, INavigationGuard
+public partial class SearchPageViewModel : ObservableObject, INavigationAware, INavigationGuard
 {
+    private INavigation Navigation { get; } = App.Current.GetRequiredService<INavigation>();
+
+
     public ValueTask OnNavigatedToAsync(object? parameter, CancellationToken cancellationToken)
     {
         return ValueTask.CompletedTask;
@@ -19,12 +22,12 @@ public partial class LoginViewModel(INavigation navigation) : ObservableObject, 
 
     public ValueTask<NavigationDecision> CanNavigateFromAsync(CancellationToken cancellationToken)
     {
-        return ValueTask.FromResult(NavigationDecision.Proceed);
+        return ValueTask.FromResult(NavigationDecision.Reject);
     }
 
     [RelayCommand]
-    private void CompleteLogin()
+    private void Back()
     {
-        navigation.Root.Navigate<ShellPage>(NavigationKind.Reset);
+        Navigation.NavigateBack();
     }
 }
