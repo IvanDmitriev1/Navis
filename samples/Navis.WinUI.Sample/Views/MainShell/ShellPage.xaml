@@ -8,10 +8,10 @@
 
     <NavigationView
         x:Name="Navigation"
-        AutomationProperties.AutomationId="ShellNavigationView"
-        AutomationProperties.Name="Sample navigation"
         nav:NavigationViewProperties.Frame="{x:Bind ContentFrame}"
         nav:TitleBarNavigation.IsPaneTarget="true"
+        AutomationProperties.AutomationId="ShellNavigationView"
+        AutomationProperties.Name="Sample navigation"
         IsBackButtonVisible="Collapsed"
         IsSettingsVisible="False"
         OpenPaneLength="200"
@@ -22,22 +22,19 @@
                 AutomationProperties.AutomationId="OverviewNavigationItem"
                 AutomationProperties.Name="Overview"
                 Content="Overview"
-                Icon="Home"
-                SelectsOnInvoked="False" />
+                Icon="Home" />
             <NavigationViewItem
                 nav:Navigate.To="{nav:XamlType TypeName=mainShell:ExamplesPage}"
                 AutomationProperties.AutomationId="ExamplesNavigationItem"
                 AutomationProperties.Name="Examples"
                 Content="Examples"
-                Icon="Library"
-                SelectsOnInvoked="False" />
+                Icon="Library" />
             <NavigationViewItem
                 nav:Navigate.To="{nav:XamlType TypeName=mainShell:DraftPage}"
                 AutomationProperties.AutomationId="DraftNavigationItem"
                 AutomationProperties.Name="Draft"
                 Content="Draft"
-                Icon="Edit"
-                SelectsOnInvoked="False" />
+                Icon="Edit" />
         </NavigationView.MenuItems>
 
         <Frame

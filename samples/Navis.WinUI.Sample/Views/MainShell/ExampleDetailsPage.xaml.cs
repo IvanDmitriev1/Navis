@@ -9,8 +9,9 @@ public sealed partial class ExampleDetailsPage : Page
     public ExampleDetailsPage()
     {
         ViewModel = App.Current.GetRequiredService<ExampleDetailsPageViewModel>();
+        DataContext = ViewModel;
         InitializeComponent();
     }
 
-    internal ExampleDetailsPageViewModel ViewModel { get; }
+    public ExampleDetailsPageViewModel ViewModel { get; }
 }

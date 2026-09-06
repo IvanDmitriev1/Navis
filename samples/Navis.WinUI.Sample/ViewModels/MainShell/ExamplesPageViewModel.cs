@@ -7,23 +7,26 @@ using Navis.WinUI.Sample.Views.MainShell;
 
 namespace Navis.WinUI.Sample.ViewModels.MainShell;
 
-internal partial class ExamplesPageViewModel : ObservableObject
+public partial class ExamplesPageViewModel : ObservableObject
 {
     private readonly INavigation _navigation;
 
     public ExamplesPageViewModel()
     {
         _navigation = App.Current.GetRequiredService<INavigation>();
+        Examples = NavigationExampleCatalog.All
+            .Select(example => new NavigationExampleItemViewModel(example, OpenExampleCommand))
+            .ToArray();
     }
 
-    public IReadOnlyList<NavigationExample> Examples => NavigationExampleCatalog.All;
+    public IReadOnlyList<NavigationExampleItemViewModel> Examples { get; }
 
     [RelayCommand]
-    private void OpenExample(NavigationExample? example)
+    private void OpenExample(NavigationParameterExample? example)
     {
         if (example is null)
             return;
 
-        _navigation.Navigate<ExampleDetailsPage, NavigationExample>(example);
+        _navigation.Navigate<ExampleDetailsPage, NavigationParameterExample>(example);
     }
 }

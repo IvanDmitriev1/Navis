@@ -1,6 +1,6 @@
 namespace Navis.WinUI.Sample.Models;
 
-internal sealed record NavigationExample(
+public sealed record NavigationParameterExample(
     string Title,
     string Description,
     string ApiSurface);

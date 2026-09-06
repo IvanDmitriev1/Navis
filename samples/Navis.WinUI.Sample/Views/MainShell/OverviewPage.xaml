@@ -4,86 +4,60 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mainShell="using:Navis.WinUI.Sample.Views.MainShell"
-    xmlns:views="using:Navis.WinUI.Sample.Views"
-    xmlns:nav="using:Navis.WinUI">
+    xmlns:nav="using:Navis.WinUI"
+    xmlns:views="using:Navis.WinUI.Sample.Views">
 
     <nav:TitleBarNavigation.Content>
         <TextBlock Text="Overview" />
     </nav:TitleBarNavigation.Content>
 
-    <ScrollViewer
-        HorizontalScrollBarVisibility="Disabled"
-        VerticalScrollBarVisibility="Auto">
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
         <StackPanel
             MaxWidth="760"
             Padding="32,24"
             HorizontalAlignment="Center"
             Spacing="24">
             <StackPanel Spacing="8">
-                <TextBlock
-                    Style="{StaticResource TitleTextBlockStyle}"
-                    Text="Navis navigation sample" />
-                <TextBlock
-                    Text="A focused sample for exploring navigation capabilities in a compact WinUI shell."
-                    TextWrapping="Wrap" />
+                <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="Navis navigation sample" />
+                <TextBlock Text="A focused sample for exploring navigation capabilities in a compact WinUI shell." TextWrapping="Wrap" />
             </StackPanel>
 
-            <Border
-                Padding="20"
-                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+            <Border Padding="20" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                 <StackPanel Spacing="12">
-                    <TextBlock
-                        Style="{StaticResource SubtitleTextBlockStyle}"
-                        Text="Navigation capabilities" />
-                    <TextBlock
-                        Text="The shell combines a root frame, a child content frame, a synchronized NavigationView, and title-bar navigation."
-                        TextWrapping="Wrap" />
-                    <TextBlock
-                        Text="The next examples will demonstrate declarative routes, typed parameters, guards, and parent or root navigation."
-                        TextWrapping="Wrap" />
+                    <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Navigation capabilities" />
+                    <TextBlock Text="The shell combines a root frame, a child content frame, a synchronized NavigationView, and title-bar navigation." TextWrapping="Wrap" />
+                    <TextBlock Text="The next examples will demonstrate declarative routes, typed parameters, guards, and parent or root navigation." TextWrapping="Wrap" />
                 </StackPanel>
             </Border>
 
-            <Border
-                Padding="20"
-                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+            <Border Padding="20" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                 <StackPanel Spacing="12">
-                    <TextBlock
-                        Style="{StaticResource SubtitleTextBlockStyle}"
-                        Text="Examples" />
-                    <TextBlock
-                        Text="Explore declarative routes, typed parameters, and navigation guards."
-                        TextWrapping="Wrap" />
+                    <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Examples" />
+                    <TextBlock Text="Explore declarative routes, typed parameters, and navigation guards." TextWrapping="Wrap" />
                     <Button
+                        nav:Navigate.To="{nav:XamlType TypeName=mainShell:ExamplesPage}"
                         AutomationProperties.AutomationId="OverviewExamplesButton"
                         AutomationProperties.Name="Open Examples"
-                        Content="Open Examples"
-                        nav:Navigate.To="{nav:XamlType TypeName=mainShell:ExamplesPage}" />
+                        Content="Open Examples" />
                     <Button
+                        nav:Navigate.Parameter="{x:Bind ViewModel.FeaturedParameterExample}"
+                        nav:Navigate.To="{nav:XamlType TypeName=mainShell:ExampleDetailsPage}"
                         AutomationProperties.AutomationId="OverviewFeaturedExampleButton"
                         AutomationProperties.Name="Open featured example"
-                        Content="Open Featured Example"
-                        nav:Navigate.To="{nav:XamlType TypeName=mainShell:ExampleDetailsPage}"
-                        nav:Navigate.Parameter="{x:Bind FeaturedExample}" />
+                        Content="Open Featured Example" />
                 </StackPanel>
             </Border>
 
-            <Border
-                Padding="20"
-                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+            <Border Padding="20" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                 <StackPanel Spacing="12">
-                    <TextBlock
-                        Style="{StaticResource SubtitleTextBlockStyle}"
-                        Text="Parent and root navigation" />
-                    <TextBlock
-                        Text="Open a standalone page in the window's root frame, then return with a root reset to restore a clean shell journal."
-                        TextWrapping="Wrap" />
+                    <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Parent and root navigation" />
+                    <TextBlock Text="Open a standalone page in the window's root frame, then return with a root reset to restore a clean shell journal." TextWrapping="Wrap" />
                     <Button
+                        nav:Navigate.Target="Parent"
+                        nav:Navigate.To="{nav:XamlType TypeName=views:StandalonePage}"
                         AutomationProperties.AutomationId="OverviewStandaloneButton"
                         AutomationProperties.Name="Open standalone page"
-                        Content="Open Standalone Page"
-                        nav:Navigate.Target="Parent"
-                        nav:Navigate.To="{nav:XamlType TypeName=views:StandalonePage}" />
+                        Content="Open Standalone Page" />
                 </StackPanel>
             </Border>
         </StackPanel>

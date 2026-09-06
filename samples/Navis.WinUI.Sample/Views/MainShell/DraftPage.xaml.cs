@@ -9,6 +9,7 @@ public sealed partial class DraftPage : Page
     public DraftPage()
     {
         ViewModel = App.Current.GetRequiredService<DraftPageViewModel>();
+        DataContext = ViewModel;
         InitializeComponent();
     }
 
