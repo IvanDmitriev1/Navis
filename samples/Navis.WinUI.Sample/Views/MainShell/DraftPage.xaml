@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="Navis.WinUI.Sample.Views.MainShell.DraftPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:nav="using:Navis.WinUI">
+
+    <nav:TitleBarNavigation.Content>
+        <TextBlock Text="Draft" />
+    </nav:TitleBarNavigation.Content>
+
+    <ScrollViewer
+        HorizontalScrollBarVisibility="Disabled"
+        VerticalScrollBarVisibility="Auto">
+        <StackPanel
+            MaxWidth="760"
+            Padding="32,24"
+            HorizontalAlignment="Center"
+            Spacing="20">
+            <StackPanel Spacing="8">
+                <TextBlock
+                    Style="{StaticResource TitleTextBlockStyle}"
+                    Text="Guarded draft" />
+                <TextBlock
+                    Text="Edit the draft, then try leaving with the menu or title-bar back button to see the navigation guard in action."
+                    TextWrapping="Wrap" />
+            </StackPanel>
+
+            <TextBox
+                AcceptsReturn="True"
+                AutomationProperties.AutomationId="DraftTextBox"
+                AutomationProperties.Name="Draft text"
+                Header="Draft text"
+                MinHeight="180"
+                PlaceholderText="Start writing..."
+                Text="{Binding DraftText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                TextWrapping="Wrap" />
+
+            <InfoBar
+                IsClosable="False"
+                IsOpen="{Binding IsDirty}"
+                Severity="Warning"
+                Title="Unsaved changes">
+                <InfoBar.Content>
+                    <StackPanel Spacing="12">
+                        <TextBlock
+                            Text="Save or discard this draft before leaving."
+                            TextWrapping="Wrap" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button
+                                AutomationProperties.AutomationId="DraftSaveButton"
+                                AutomationProperties.Name="Save draft"
+                                Command="{Binding SaveCommand}"
+                                Content="Save" />
+                            <Button
+                                AutomationProperties.AutomationId="DraftDiscardButton"
+                                AutomationProperties.Name="Discard draft"
+                                Command="{Binding DiscardCommand}"
+                                Content="Discard" />
+                        </StackPanel>
+                    </StackPanel>
+                </InfoBar.Content>
+            </InfoBar>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

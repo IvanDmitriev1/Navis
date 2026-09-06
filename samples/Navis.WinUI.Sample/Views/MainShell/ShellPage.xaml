@@ -8,6 +8,8 @@
 
     <NavigationView
         x:Name="Navigation"
+        AutomationProperties.AutomationId="ShellNavigationView"
+        AutomationProperties.Name="Sample navigation"
         nav:NavigationViewProperties.Frame="{x:Bind ContentFrame}"
         nav:TitleBarNavigation.IsPaneTarget="true"
         IsBackButtonVisible="Collapsed"
@@ -16,22 +18,31 @@
         PaneDisplayMode="Left">
         <NavigationView.MenuItems>
             <NavigationViewItem
-                nav:Navigate.To="{nav:XamlType TypeName=mainShell:HomePage}"
-                Content="Home"
-                Icon="Home" />
+                nav:Navigate.To="{nav:XamlType TypeName=mainShell:OverviewPage}"
+                AutomationProperties.AutomationId="OverviewNavigationItem"
+                AutomationProperties.Name="Overview"
+                Content="Overview"
+                Icon="Home"
+                SelectsOnInvoked="False" />
             <NavigationViewItem
-                nav:Navigate.To="{nav:XamlType TypeName=mainShell:SearchPage}"
-                Content="Search"
-                Icon="Find" />
+                nav:Navigate.To="{nav:XamlType TypeName=mainShell:ExamplesPage}"
+                AutomationProperties.AutomationId="ExamplesNavigationItem"
+                AutomationProperties.Name="Examples"
+                Content="Examples"
+                Icon="Library"
+                SelectsOnInvoked="False" />
             <NavigationViewItem
-                nav:Navigate.To="{nav:XamlType TypeName=mainShell:LibraryPage}"
-                Content="Library"
-                Icon="Library" />
+                nav:Navigate.To="{nav:XamlType TypeName=mainShell:DraftPage}"
+                AutomationProperties.AutomationId="DraftNavigationItem"
+                AutomationProperties.Name="Draft"
+                Content="Draft"
+                Icon="Edit"
+                SelectsOnInvoked="False" />
         </NavigationView.MenuItems>
 
         <Frame
             x:Name="ContentFrame"
-            nav:NavigationHost.InitialPage="{nav:XamlType TypeName=mainShell:HomePage}"
+            nav:NavigationHost.InitialPage="{nav:XamlType TypeName=mainShell:OverviewPage}"
             nav:NavigationHost.IsEnabled="True"
             nav:TitleBarNavigation.IsBackTarget="true" />
     </NavigationView>

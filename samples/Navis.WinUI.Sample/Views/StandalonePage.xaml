@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="Navis.WinUI.Sample.Views.StandalonePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mainShell="using:Navis.WinUI.Sample.Views.MainShell"
+    xmlns:nav="using:Navis.WinUI">
+
+    <ScrollViewer
+        HorizontalScrollBarVisibility="Disabled"
+        VerticalScrollBarVisibility="Auto">
+        <StackPanel
+            MaxWidth="760"
+            Padding="32,24"
+            HorizontalAlignment="Center"
+            Spacing="24">
+            <StackPanel Spacing="8">
+                <TextBlock
+                    Style="{StaticResource TitleTextBlockStyle}"
+                    Text="Standalone root page" />
+                <TextBlock
+                    Text="This page is hosted by the window's root frame instead of the shell's child content frame."
+                    TextWrapping="Wrap" />
+            </StackPanel>
+
+            <Border
+                Padding="20"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel Spacing="12">
+                    <TextBlock
+                        Style="{StaticResource SubtitleTextBlockStyle}"
+                        Text="Parent navigation" />
+                    <TextBlock
+                        Text="The Overview button targets its parent navigation host, so the shell child frame can open this standalone route in the window root."
+                        TextWrapping="Wrap" />
+                    <TextBlock
+                        Style="{StaticResource SubtitleTextBlockStyle}"
+                        Text="Root reset" />
+                    <TextBlock
+                        Text="Returning targets the root host with Reset, clearing the standalone entry and restoring ShellPage as the root destination."
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <Button
+                AutomationProperties.AutomationId="StandaloneReturnButton"
+                AutomationProperties.Name="Return to shell"
+                Content="Return to Shell"
+                HorizontalAlignment="Left"
+                nav:Navigate.Kind="Reset"
+                nav:Navigate.Target="Root"
+                nav:Navigate.To="{nav:XamlType TypeName=mainShell:ShellPage}" />
+        </StackPanel>
+    </ScrollViewer>
+</Page>

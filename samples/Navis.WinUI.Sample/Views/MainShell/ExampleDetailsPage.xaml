@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="Navis.WinUI.Sample.Views.MainShell.ExampleDetailsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:nav="using:Navis.WinUI">
+
+    <nav:TitleBarNavigation.Content>
+        <TextBlock Text="{Binding Example.Title}" />
+    </nav:TitleBarNavigation.Content>
+
+    <ScrollViewer
+        HorizontalScrollBarVisibility="Disabled"
+        VerticalScrollBarVisibility="Auto">
+        <StackPanel
+            MaxWidth="760"
+            Padding="32,24"
+            HorizontalAlignment="Center"
+            Spacing="20">
+            <TextBlock
+                Style="{StaticResource TitleTextBlockStyle}"
+                Text="{Binding Example.Title}" />
+            <TextBlock
+                Text="{Binding Example.Description}"
+                TextWrapping="Wrap" />
+            <Border
+                Padding="20"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel Spacing="8">
+                    <TextBlock
+                        Style="{StaticResource SubtitleTextBlockStyle}"
+                        Text="API surface" />
+                    <TextBlock
+                        Text="{Binding Example.ApiSurface}"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

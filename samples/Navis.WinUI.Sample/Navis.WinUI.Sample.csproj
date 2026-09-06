@@ -55,7 +55,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Views\Authentication\" />
     <Folder Include="Views\MainShell\" />
   </ItemGroup>
 

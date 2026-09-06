@@ -4,15 +4,15 @@ using Navis.WinUI.Sample.ViewModels.MainShell;
 
 namespace Navis.WinUI.Sample.Views.MainShell;
 
-public sealed partial class SearchPage : Page
+public sealed partial class ExampleDetailsPage : Page
 {
-    public SearchPage()
+    public ExampleDetailsPage()
     {
         InitializeComponent();
 
-        ViewModel = App.Current.GetRequiredService<SearchPageViewModel>();
+        ViewModel = App.Current.GetRequiredService<ExampleDetailsPageViewModel>();
         DataContext = ViewModel;
     }
 
-    public SearchPageViewModel ViewModel { get; }
+    internal ExampleDetailsPageViewModel ViewModel { get; }
 }
