@@ -5,10 +5,14 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mainShell="using:Navis.WinUI.Sample.Views.MainShell"
     xmlns:nav="using:Navis.WinUI"
-    xmlns:views="using:Navis.WinUI.Sample.Views">
+    xmlns:views="using:Navis.WinUI.Sample.Views"
+    NavigationCacheMode="Required">
 
     <nav:TitleBarNavigation.Content>
-        <TextBlock Text="Overview" />
+        <TextBlock
+            HorizontalAlignment="Center"
+            HorizontalTextAlignment="Center"
+            Text="Overview" />
     </nav:TitleBarNavigation.Content>
 
     <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">

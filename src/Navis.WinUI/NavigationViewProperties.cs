@@ -41,7 +41,11 @@ public static partial class NavigationViewProperties
                                   throw new InvalidOperationException("Failed to get the destination page type.");
         var parameter = Navigate.GetParameter(item);
 
-        NavigationHost.GetFrameNavigationInstance(frame).Navigate(destinationPageType, parameter);
+        var navigationInstance = NavigationHost.GetFrameNavigationInstance(frame);
+        if (destinationPageType == navigationInstance.CurrentPageType)
+            return;
+
+        navigationInstance.Navigate(destinationPageType, parameter);
     }
 
     private static void ContentFrame_OnNavigated(object sender, NavigationEventArgs args)
@@ -50,8 +54,13 @@ public static partial class NavigationViewProperties
         if (frame.GetValue(NavigationViewProperty) is not NavigationView navigationView)
             return;
 
-        navigationView.SelectedItem = navigationView.MenuItems
+        var selectedItem = navigationView.MenuItems
             .Cast<NavigationViewItemBase>()
             .FirstOrDefault(item => Navigate.GetTo(item) == args.SourcePageType);
+
+        if (selectedItem is not null)
+        {
+            navigationView.SelectedItem = selectedItem;
+        }
     }
 }

@@ -4,14 +4,17 @@ using Navis.WinUI.Sample.Models;
 
 namespace Navis.WinUI.Sample.ViewModels.MainShell;
 
-public partial class ExampleDetailsPageViewModel : ObservableObject, INavigationAware<NavigationParameterExample>
+public partial class ExampleDetailsPageViewModel : ObservableObject, INavigationAware<NavigationParameterExample>, INavigationAware
 {
     [ObservableProperty]
     public partial NavigationParameterExample? Example { get; set; }
 
-    public ValueTask OnNavigatedToAsync(
-        NavigationParameterExample parameter,
-        CancellationToken cancellationToken)
+    public ValueTask OnNavigatedToAsync(CancellationToken cancellationToken)
+    {
+        return ValueTask.CompletedTask;
+    }
+
+    public ValueTask OnNavigatedToAsync(NavigationParameterExample parameter, CancellationToken cancellationToken)
     {
         Example = parameter;
         return ValueTask.CompletedTask;

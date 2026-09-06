@@ -21,4 +21,22 @@ internal static class FrameExtensions
         NavigationDecision decision = await guard.CanNavigateFromAsync(token);
         return decision != NavigationDecision.Reject;
     }
+
+    public static ValueTask NotifyNavigatedToAsync(this NavigationEventArgs args, CancellationToken cancellationToken)
+    {
+        if (args.Content is not FrameworkElement { DataContext: {}  dataContext})
+            return ValueTask.CompletedTask;
+
+        if (args.Parameter is null && dataContext is INavigationAware navigationAware)
+        {
+            return navigationAware.OnNavigatedToAsync(cancellationToken);
+        }
+
+        if (args.Parameter is not null && dataContext is IParameterizedNavigationAware navigationAwareWithParameter)
+        {
+            return navigationAwareWithParameter.OnNavigatedToAsync(args.Parameter, cancellationToken);
+        }
+
+        return ValueTask.CompletedTask;
+    }
 }

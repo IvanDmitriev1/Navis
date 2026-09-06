@@ -23,7 +23,11 @@
         <TitleBar
             x:Name="TitleBar"
             Grid.Row="0"
-            nav:TitleBarNavigation.IsHost="True" />
+            nav:TitleBarNavigation.IsHost="True">
+            <TitleBar.Resources>
+                <HorizontalAlignment x:Key="TitleBarContentHorizontalAlignment">Stretch</HorizontalAlignment>
+            </TitleBar.Resources>
+        </TitleBar>
 
         <Frame
             x:Name="RootFrame"

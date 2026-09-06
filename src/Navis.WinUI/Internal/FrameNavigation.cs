@@ -18,7 +18,7 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
     private readonly CancellationTokenSource _cts = new();
     private readonly Frame _currentFrame;
     private readonly FrameNavigation? _parent;
-    private FrameNavigation? _child = null;
+    private FrameNavigation? _child;
 
     public bool IsDisposed { get; private set; }
 
@@ -83,7 +83,7 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
         try
         {
             var target = _currentFrame.GetNavigationTarget();
-            if (target is INavigationAware navigationAware)
+            if (target is INavigationLeavingAware navigationAware)
             {
                 await navigationAware.OnNavigatedFromAsync(CancellationToken.None);
             }
@@ -191,7 +191,7 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
             NavigatorActivation.Pop(_currentFrame);
         }
 
-        if (source is INavigationAware sourceAware)
+        if (source is INavigationLeavingAware sourceAware)
         {
             await sourceAware.OnNavigatedFromAsync(_cts.Token);
         }
@@ -248,14 +248,9 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
         
     }
 
-    private void CurrentFrameOnNavigated(object sender, NavigationEventArgs e)
+    private async void CurrentFrameOnNavigated(object sender, NavigationEventArgs e)
     {
-        if (e.Content is not FrameworkElement { DataContext: INavigationAware navigationAware })
-        {
-            return;
-        }
-
-        navigationAware.OnNavigatedToAsync(e.Parameter, _cts.Token);
+        await e.NotifyNavigatedToAsync(_cts.Token);
     }
 
     private void EnsureCanOperate()
