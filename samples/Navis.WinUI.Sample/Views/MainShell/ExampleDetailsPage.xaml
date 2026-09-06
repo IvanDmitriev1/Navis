@@ -6,7 +6,7 @@
     xmlns:nav="using:Navis.WinUI">
 
     <nav:TitleBarNavigation.Content>
-        <TextBlock Text="{Binding Example.Title}" />
+        <TextBlock Text="{x:Bind ViewModel.Example.Title, Mode=OneWay}" />
     </nav:TitleBarNavigation.Content>
 
     <ScrollViewer
@@ -19,9 +19,9 @@
             Spacing="20">
             <TextBlock
                 Style="{StaticResource TitleTextBlockStyle}"
-                Text="{Binding Example.Title}" />
+                Text="{x:Bind ViewModel.Example.Title, Mode=OneWay}" />
             <TextBlock
-                Text="{Binding Example.Description}"
+                Text="{x:Bind ViewModel.Example.Description, Mode=OneWay}"
                 TextWrapping="Wrap" />
             <Border
                 Padding="20"
@@ -31,7 +31,7 @@
                         Style="{StaticResource SubtitleTextBlockStyle}"
                         Text="API surface" />
                     <TextBlock
-                        Text="{Binding Example.ApiSurface}"
+                        Text="{x:Bind ViewModel.Example.ApiSurface, Mode=OneWay}"
                         TextWrapping="Wrap" />
                 </StackPanel>
             </Border>

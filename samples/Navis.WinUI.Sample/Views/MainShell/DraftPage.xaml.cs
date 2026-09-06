@@ -8,10 +8,8 @@ public sealed partial class DraftPage : Page
 {
     public DraftPage()
     {
-        InitializeComponent();
-
         ViewModel = App.Current.GetRequiredService<DraftPageViewModel>();
-        DataContext = ViewModel;
+        InitializeComponent();
     }
 
     internal DraftPageViewModel ViewModel { get; }

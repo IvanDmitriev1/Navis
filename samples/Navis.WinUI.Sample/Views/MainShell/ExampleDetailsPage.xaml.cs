@@ -8,10 +8,8 @@ public sealed partial class ExampleDetailsPage : Page
 {
     public ExampleDetailsPage()
     {
-        InitializeComponent();
-
         ViewModel = App.Current.GetRequiredService<ExampleDetailsPageViewModel>();
-        DataContext = ViewModel;
+        InitializeComponent();
     }
 
     internal ExampleDetailsPageViewModel ViewModel { get; }

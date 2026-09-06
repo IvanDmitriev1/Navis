@@ -33,12 +33,12 @@
                 Header="Draft text"
                 MinHeight="180"
                 PlaceholderText="Start writing..."
-                Text="{Binding DraftText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                Text="{x:Bind ViewModel.DraftText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                 TextWrapping="Wrap" />
 
             <InfoBar
                 IsClosable="False"
-                IsOpen="{Binding IsDirty}"
+                IsOpen="{x:Bind ViewModel.IsDirty, Mode=OneWay}"
                 Severity="Warning"
                 Title="Unsaved changes">
                 <InfoBar.Content>
@@ -50,12 +50,12 @@
                             <Button
                                 AutomationProperties.AutomationId="DraftSaveButton"
                                 AutomationProperties.Name="Save draft"
-                                Command="{Binding SaveCommand}"
+                                Command="{x:Bind ViewModel.SaveCommand}"
                                 Content="Save" />
                             <Button
                                 AutomationProperties.AutomationId="DraftDiscardButton"
                                 AutomationProperties.Name="Discard draft"
-                                Command="{Binding DiscardCommand}"
+                                Command="{x:Bind ViewModel.DiscardCommand}"
                                 Content="Discard" />
                         </StackPanel>
                     </StackPanel>
