@@ -8,7 +8,5 @@
   <Folder Name="/src/">
     <Project Path="src/Navis.WinUI/Navis.WinUI.csproj" Id="f74eb601-54e7-400c-9a91-055b85181809" />
   </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests/Navis.WinUI.Tests/Navis.WinUI.Tests.csproj" />
-  </Folder>
+  <Folder Name="/tests/" />
 </Solution>
