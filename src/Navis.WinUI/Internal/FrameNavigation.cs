@@ -19,6 +19,9 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
     private readonly Frame _currentFrame;
     private readonly FrameNavigation? _parent;
     private FrameNavigation? _child;
+    private bool _commitObserved;
+    private bool _isCommitting;
+    private bool _isNavigating;
 
     public bool IsDisposed { get; private set; }
 
@@ -61,7 +64,7 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
         get
         {
             EnsureCanOperate();
-            return _currentFrame.CanGoBack;
+            return _currentFrame.CanGoForward;
         }
     }
 
@@ -107,10 +110,7 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
         if (!_currentFrame.CanGoBack)
             throw new InvalidOperationException("Cannot navigate back because there is no page in the back stack.");
 
-        _ = StartNavigation(
-            _currentFrame.BackStack[^1].SourcePageType,
-            NavigationKind.Navigate,
-            static frame => frame.GoBack());
+        _ = StartJournalNavigation(NavigationMode.Back);
     }
 
     public void NavigateForward()
@@ -118,10 +118,7 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
         if (!_currentFrame.CanGoForward)
             throw new InvalidOperationException("Cannot navigate forward because there is no page in the forward stack.");
 
-        _ = StartNavigation(
-            _currentFrame.ForwardStack[^1].SourcePageType,
-            NavigationKind.Navigate,
-            static frame => frame.GoForward());
+        _ = StartJournalNavigation(NavigationMode.Forward);
     }
 
     internal void Navigate(
@@ -146,54 +143,86 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
     private async Task StartNavigation(Type pageType, object? parameter, NavigationKind kind)
     {
         EnsureCanOperate();
-        NavigatorActivation.Push(_currentFrame);
 
-        var source = _currentFrame.GetNavigationTarget();
-        bool committed;
+        if (_isNavigating)
+            return;
+
+        _isNavigating = true;
 
         try
         {
+            var source = _currentFrame.GetNavigationTarget();
+
             if (!await CanNavigate())
                 return;
 
-            committed = NavigateTo(pageType, parameter, kind);
+            if (!NavigateTo(pageType, parameter, kind))
+                return;
+
+            var destination = _currentFrame.Content;
+            await NotifyNavigationAsync(source, destination, parameter);
         }
         finally
         {
-            NavigatorActivation.Pop(_currentFrame);
-        }
-
-        if (!committed)
-            return;
-
-        if (source is INavigationAware sourceAware)
-        {
-            await sourceAware.OnNavigatedFromAsync(_cts.Token);
+            _isNavigating = false;
         }
     }
 
-    private async Task StartNavigation(Type pageType, NavigationKind kind, Action<Frame> action)
+    private async Task StartJournalNavigation(NavigationMode mode)
     {
         EnsureCanOperate();
-        NavigatorActivation.Push(_currentFrame);
 
-        var source = _currentFrame.GetNavigationTarget();
+        if (_isNavigating)
+            return;
+
+        _isNavigating = true;
 
         try
         {
+            var source = _currentFrame.GetNavigationTarget();
+
             if (!await CanNavigate())
                 return;
 
-            action.Invoke(_currentFrame);
+            var parameter = mode switch
+            {
+                NavigationMode.Back => _currentFrame.BackStack[^1].Parameter,
+                NavigationMode.Forward => _currentFrame.ForwardStack[^1].Parameter,
+                _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, null)
+            };
+
+            _commitObserved = false;
+            _isCommitting = true;
+            NavigatorActivation.Push(_currentFrame);
+
+            try
+            {
+                switch (mode)
+                {
+                    case NavigationMode.Back:
+                        _currentFrame.GoBack();
+                        break;
+
+                    case NavigationMode.Forward:
+                        _currentFrame.GoForward();
+                        break;
+                }
+            }
+            finally
+            {
+                NavigatorActivation.Pop(_currentFrame);
+                _isCommitting = false;
+            }
+
+            if (!_commitObserved)
+                return;
+
+            var destination = _currentFrame.Content;
+            await NotifyNavigationAsync(source, destination, parameter);
         }
         finally
         {
-            NavigatorActivation.Pop(_currentFrame);
-        }
-
-        if (source is INavigationLeavingAware sourceAware)
-        {
-            await sourceAware.OnNavigatedFromAsync(_cts.Token);
+            _isNavigating = false;
         }
     }
 
@@ -209,9 +238,19 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
 
     private bool NavigateTo(Type pageType, object? parameter, NavigationKind kind)
     {
-        bool committed = _currentFrame.Navigate(
-            pageType,
-            parameter);
+        bool committed;
+        _isCommitting = true;
+        NavigatorActivation.Push(_currentFrame);
+
+        try
+        {
+            committed = _currentFrame.Navigate(pageType, parameter);
+        }
+        finally
+        {
+            NavigatorActivation.Pop(_currentFrame);
+            _isCommitting = false;
+        }
 
         if (!committed)
             return false;
@@ -224,8 +263,7 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
             case NavigationKind.Replace:
                 if (_currentFrame.BackStack.Count > 0)
                 {
-                    _currentFrame.BackStack.RemoveAt(
-                        _currentFrame.BackStack.Count - 1);
+                    _currentFrame.BackStack.RemoveAt(_currentFrame.BackStack.Count - 1);
                 }
 
                 break;
@@ -243,6 +281,16 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
         return true;
     }
 
+    private async Task NotifyNavigationAsync(object? source, object? destination, object? parameter)
+    {
+        if (source is INavigationLeavingAware sourceAware)
+        {
+            await sourceAware.OnNavigatedFromAsync(_cts.Token);
+        }
+
+        await destination.NotifyNavigatedToAsync(parameter, _cts.Token);
+    }
+
     private void CurrentFrameOnNavigating(object sender, NavigatingCancelEventArgs e)
     {
         
@@ -250,6 +298,12 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
 
     private async void CurrentFrameOnNavigated(object sender, NavigationEventArgs e)
     {
+        if (_isCommitting)
+        {
+            _commitObserved = true;
+            return;
+        }
+
         await e.NotifyNavigatedToAsync(_cts.Token);
     }
 

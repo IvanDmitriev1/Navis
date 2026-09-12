@@ -24,17 +24,22 @@ internal static class FrameExtensions
 
     public static ValueTask NotifyNavigatedToAsync(this NavigationEventArgs args, CancellationToken cancellationToken)
     {
-        if (args.Content is not FrameworkElement { DataContext: {}  dataContext})
+        return args.Content.NotifyNavigatedToAsync(args.Parameter, cancellationToken);
+    }
+
+    public static ValueTask NotifyNavigatedToAsync(this object? content, object? parameter, CancellationToken cancellationToken)
+    {
+        if (content is not FrameworkElement { DataContext: {} dataContext })
             return ValueTask.CompletedTask;
 
-        if (args.Parameter is null && dataContext is INavigationAware navigationAware)
+        if (parameter is null && dataContext is INavigationAware navigationAware)
         {
             return navigationAware.OnNavigatedToAsync(cancellationToken);
         }
 
-        if (args.Parameter is not null && dataContext is IParameterizedNavigationAware navigationAwareWithParameter)
+        if (parameter is not null && dataContext is IParameterizedNavigationAware navigationAwareWithParameter)
         {
-            return navigationAwareWithParameter.OnNavigatedToAsync(args.Parameter, cancellationToken);
+            return navigationAwareWithParameter.OnNavigatedToAsync(parameter, cancellationToken);
         }
 
         return ValueTask.CompletedTask;
