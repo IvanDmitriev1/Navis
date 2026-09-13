@@ -6,6 +6,7 @@ on:
       - 'v*'
 
 permissions:
+  id-token: write
   contents: read
 
 jobs:
@@ -30,6 +31,4 @@ jobs:
         run: dotnet pack src\Navis.WinUI\Navis.WinUI.csproj --configuration Release --no-build --output artifacts\packages
 
       - name: Publish package
-        env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-        run: dotnet nuget push artifacts\packages\*.nupkg --api-key $env:NUGET_API_KEY --source https://api.nuget.org/v3/index.json --skip-duplicate
+        run: dotnet nuget push artifacts\packages\*.nupkg --source https://api.nuget.org/v3/index.json --skip-duplicate
