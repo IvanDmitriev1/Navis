@@ -30,5 +30,13 @@ jobs:
       - name: Pack
         run: dotnet pack src\Navis.WinUI\Navis.WinUI.csproj --configuration Release --no-build --output artifacts\packages
 
+      - name: NuGet login
+        id: nuget-login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
       - name: Publish package
-        run: dotnet nuget push artifacts\packages\*.nupkg --source https://api.nuget.org/v3/index.json --skip-duplicate
+        env:
+          NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
+        run: dotnet nuget push artifacts\packages\*.nupkg --api-key "$env:NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
