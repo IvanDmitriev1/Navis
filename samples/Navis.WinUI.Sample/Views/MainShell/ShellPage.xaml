@@ -41,6 +41,17 @@
             x:Name="ContentFrame"
             nav:NavigationHost.InitialPage="{nav:XamlType TypeName=mainShell:OverviewPage}"
             nav:NavigationHost.IsEnabled="True"
-            nav:TitleBarNavigation.IsBackTarget="true" />
+            nav:TitleBarNavigation.IsBackTarget="true">
+            <nav:TitleBarNavigation.PersistentContent>
+                <AutoSuggestBox
+                    Width="240"
+                    HorizontalAlignment="Center"
+                    AutomationProperties.AutomationId="OverviewSearchBox"
+                    AutomationProperties.Name="Search examples"
+                    ItemsSource="{x:Bind ViewModel.Suggestions}"
+                    PlaceholderText="Search examples"
+                    SuggestionChosen="{x:Bind ViewModel.OnSuggestionChosen}" />
+            </nav:TitleBarNavigation.PersistentContent>
+        </Frame>
     </NavigationView>
 </Page>

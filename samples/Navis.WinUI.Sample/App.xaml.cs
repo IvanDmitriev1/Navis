@@ -24,6 +24,7 @@ public partial class App : Application, IServiceProvider
 
         _serviceProvider = new ServiceCollection()
             .AddNavisNavigation()
+            .AddTransient<ShellViewModel>()
             .AddTransient<OverviewPageViewModel>()
             .AddTransient<ExamplesPageViewModel>()
             .AddTransient<ExampleDetailsPageViewModel>()

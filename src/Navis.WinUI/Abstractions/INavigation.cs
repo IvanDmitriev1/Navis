@@ -12,9 +12,24 @@ namespace Navis.WinUI.Abstractions;
 /// </remarks>
 public interface INavigation
 {
+    /// <summary>
+    /// Gets the top-level navigation host in the current nested host hierarchy.
+    /// </summary>
     INavigation Root { get; }
 
+    /// <summary>
+    /// Gets the direct parent navigation host, when this host is nested in another enabled frame.
+    /// </summary>
     INavigation? Parent { get; }
+
+    /// <summary>
+    /// Gets the current live direct child navigation host.
+    /// </summary>
+    /// <remarks>
+    /// The child host detaches when its enabled frame unloads. This property returns <see langword="null" />
+    /// after either host is disposed.
+    /// </remarks>
+    INavigation? Child { get; }
 
     Type? CurrentPageType { get; }
 

@@ -40,6 +40,7 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
     }
 
     public INavigation? Parent => _parent;
+    public INavigation? Child => !IsDisposed && _child is { IsDisposed: false } child ? child : null;
 
     public Type? CurrentPageType
     {
@@ -244,7 +245,19 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
 
         try
         {
-            committed = _currentFrame.CurrentSourcePageType == pageType || _currentFrame.Navigate(pageType, parameter);
+            if (_currentFrame.CurrentSourcePageType == pageType)
+            {
+                if (_currentFrame.Content is Page { Content: ScrollViewer scrollViewer })
+                {
+                    scrollViewer.ChangeView(null, 0, null);
+                }
+
+                committed = true;
+            }
+            else
+            {
+                committed = _currentFrame.Navigate(pageType, parameter);
+            }
         }
         finally
         {

@@ -4,6 +4,7 @@ namespace Navis.WinUI;
 [AttachedDependencyProperty<bool, NavigationView>("IsPaneTarget")]
 [AttachedDependencyProperty<bool, Frame>("IsBackTarget")]
 [AttachedDependencyProperty<UIElement, Page>("Content")]
+[AttachedDependencyProperty<UIElement, Frame>("PersistentContent")]
 public static partial class TitleBarNavigation
 {
     private sealed class NavigationState
@@ -42,6 +43,15 @@ public static partial class TitleBarNavigation
     {
         if (GetState(page) is { } state && ReferenceEquals(state.BackTarget?.Content, page))
             Refresh(state);
+    }
+
+    static partial void OnPersistentContentChanged(Frame frame, UIElement? newValue)
+    {
+        if (GetState(frame) is { } state &&
+            ReferenceEquals(state.BackTarget, frame))
+        {
+            Refresh(state);
+        }
     }
 
     private static void UpdateRegistration(FrameworkElement element, bool isEnabled)
@@ -244,16 +254,22 @@ public static partial class TitleBarNavigation
         titleBar.IsBackButtonVisible = canGoBack;
         titleBar.IsBackButtonEnabled = canGoBack;
 
-        if (state.BackTarget?.Content is Page page)
-        {
-            titleBar.Content = GetContent(page);
-
-            if (titleBar.Content is FrameworkElement contentElement)
-                contentElement.DataContext = page.DataContext;
-        }
-        else
+        if (state.BackTarget is not { } frame)
         {
             titleBar.Content = null;
+            return;
+        }
+
+        var page = frame.Content as Page;
+        var pageContent = page is null ? null : GetContent(page);
+
+        titleBar.Content = pageContent ?? GetPersistentContent(frame);
+
+        if (titleBar.Content is FrameworkElement contentElement)
+        {
+            contentElement.DataContext = pageContent is not null
+                ? page?.DataContext
+                : frame.DataContext;
         }
     }
 }
