@@ -244,7 +244,7 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
 
         try
         {
-            committed = _currentFrame.Navigate(pageType, parameter);
+            committed = _currentFrame.CurrentSourcePageType == pageType || _currentFrame.Navigate(pageType, parameter);
         }
         finally
         {
@@ -283,7 +283,10 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
 
     private async Task NotifyNavigationAsync(object? source, object? destination, object? parameter)
     {
-        if (source is INavigationLeavingAware sourceAware)
+        if (destination is not FrameworkElement { DataContext: { } destinationDataContext })
+            return;
+
+        if (!ReferenceEquals(source, destinationDataContext) && source is INavigationLeavingAware sourceAware)
         {
             await sourceAware.OnNavigatedFromAsync(_cts.Token);
         }

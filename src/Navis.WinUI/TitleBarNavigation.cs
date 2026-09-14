@@ -243,6 +243,17 @@ public static partial class TitleBarNavigation
         var canGoBack = state.BackTarget?.CanGoBack == true;
         titleBar.IsBackButtonVisible = canGoBack;
         titleBar.IsBackButtonEnabled = canGoBack;
-        titleBar.Content = state.BackTarget?.Content is Page page ? GetContent(page) : null;
+
+        if (state.BackTarget?.Content is Page page)
+        {
+            titleBar.Content = GetContent(page);
+
+            if (titleBar.Content is FrameworkElement contentElement)
+                contentElement.DataContext = page.DataContext;
+        }
+        else
+        {
+            titleBar.Content = null;
+        }
     }
 }
