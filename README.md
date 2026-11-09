@@ -10,7 +10,7 @@ Navis.WinUI is a compact WinUI 3 navigation library for typed, nested, and decla
 
 ## Quick usage
 
-Register navigation with the application's service collection. Injected `INavigation` is contextual: it resolves the navigation host for the currently active frame.
+Register navigation with the application's service collection. `INavigation` injected while a page is being created is bound to the frame activating that page. When resolved elsewhere, it defers lookup until an operation or property is used, then targets the single loaded, enabled root frame on the calling UI thread.
 
 ```csharp
 using Navis.WinUI.Extensions;
@@ -86,7 +86,7 @@ Parameters can be bound in XAML with `Navigate.Parameter`:
 
 ## Caveats
 
-- `INavigation` is contextual. Resolve or inject it where the intended frame is active; it is not a global navigation service.
+- `INavigation` resolved during page activation is bound to that frame. Deferred instances used outside activation require exactly one loaded, enabled root frame on the calling UI thread; zero or multiple roots throw. Deferred instances do not capture a frame, queue operations, or dispatch to another UI thread.
 - Navigation must run on the frame's UI thread.
 - Requests made while another navigation request is in flight are ignored.
 - Typed parameters must match the destination's `INavigationAware<TParameter>` type at runtime.

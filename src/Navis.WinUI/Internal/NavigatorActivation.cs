@@ -2,13 +2,16 @@
 
 internal static class NavigatorActivation
 {
-    private static readonly Stack<Frame> Frames = [];
+    [ThreadStatic]
+    private static Stack<Frame>? _frames;
 
-    public static Frame CurrentFrame =>
-        Frames.Count != 0
-            ? Frames.Peek()
-            : throw new InvalidOperationException(
-                "INavigator can only be resolved while a Page is being activated by a Navis Frame.");
+    private static Stack<Frame> Frames => _frames ??= new Stack<Frame>();
+
+    public static bool TryGetCurrentFrame(out Frame? frame)
+    {
+        frame = Frames.Count != 0 ? Frames.Peek() : null;
+        return frame is not null;
+    }
 
     public static void Push(Frame frame)
     {

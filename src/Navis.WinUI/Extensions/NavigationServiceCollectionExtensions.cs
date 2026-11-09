@@ -8,11 +8,7 @@ public static class NavigationServiceCollectionExtensions
 {
     public static IServiceCollection AddNavisNavigation(this IServiceCollection services)
     {
-        services.TryAddTransient<INavigation>(sp =>
-        {
-            var currentFrame = NavigatorActivation.CurrentFrame;
-            return NavigationHost.GetFrameNavigationInstance(currentFrame);
-        });
+        services.TryAddTransient<INavigation>(_ => NavigationFactory.Create());
 
         return services;
     }

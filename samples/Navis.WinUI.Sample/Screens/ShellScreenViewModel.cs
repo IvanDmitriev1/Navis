@@ -3,11 +3,11 @@ using Microsoft.UI.Xaml.Controls;
 using Navis.WinUI.Abstractions;
 using Navis.WinUI.Sample.Views.MainShell;
 
-namespace Navis.WinUI.Sample.ViewModels.MainShell;
+namespace Navis.WinUI.Sample.Screens;
 
-public sealed partial class ShellViewModel(INavigation navigation)
+public sealed partial class ShellScreenViewModel(INavigation navigation)
 {
-    public IReadOnlyList<string> Suggestions { get; } =
+    public IReadOnlyList<string> Suggestions { get; } = (string[])
     [
         "Declarative routes",
         "Typed parameters",
@@ -18,12 +18,11 @@ public sealed partial class ShellViewModel(INavigation navigation)
 
     {
         if (args?.SelectedItem is not string suggestion ||
-            string.IsNullOrWhiteSpace(suggestion) ||
-            navigation.Child is not { } child)
+            string.IsNullOrWhiteSpace(suggestion))
         {
             return;
         }
 
-        child.Navigate<OverviewPage, string>(suggestion);
+        navigation.Navigate<OverviewPage, string>(suggestion);
     }
 }

@@ -9,30 +9,18 @@
         <TextBlock Text="{x:Bind ViewModel.Example.Title, Mode=OneWay}" />
     </nav:TitleBarNavigation.Content>
 
-    <ScrollViewer
-        HorizontalScrollBarVisibility="Disabled"
-        VerticalScrollBarVisibility="Auto">
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
         <StackPanel
             MaxWidth="760"
             Padding="32,24"
             HorizontalAlignment="Center"
             Spacing="20">
-            <TextBlock
-                Style="{StaticResource TitleTextBlockStyle}"
-                Text="{x:Bind ViewModel.Example.Title, Mode=OneWay}" />
-            <TextBlock
-                Text="{x:Bind ViewModel.Example.Description, Mode=OneWay}"
-                TextWrapping="Wrap" />
-            <Border
-                Padding="20"
-                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+            <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="{x:Bind ViewModel.Example.Title, Mode=OneWay}" />
+            <TextBlock Text="{x:Bind ViewModel.Example.Description, Mode=OneWay}" TextWrapping="Wrap" />
+            <Border Padding="20" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                 <StackPanel Spacing="8">
-                    <TextBlock
-                        Style="{StaticResource SubtitleTextBlockStyle}"
-                        Text="API surface" />
-                    <TextBlock
-                        Text="{x:Bind ViewModel.Example.ApiSurface, Mode=OneWay}"
-                        TextWrapping="Wrap" />
+                    <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="API surface" />
+                    <TextBlock Text="{x:Bind ViewModel.Example.ApiSurface, Mode=OneWay}" TextWrapping="Wrap" />
                 </StackPanel>
             </Border>
         </StackPanel>

@@ -100,6 +100,7 @@ public static partial class NavigationHost
     private static void Initialize(Frame frame)
     {
         var navigation = GetFrameNavigationInstance(frame);
+        NavigationRootRegistry.Register(frame);
 
         if (frame.Content is not null)
             return;
@@ -113,6 +114,8 @@ public static partial class NavigationHost
 
     private static async ValueTask UninitializeAsync(Frame frame)
     {
+        NavigationRootRegistry.Unregister(frame);
+
         if (frame.GetValue(InstanceProperty) is not FrameNavigation navigation)
             return;
 

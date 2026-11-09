@@ -1,16 +1,19 @@
 using System.Numerics;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace Navis.WinUI.Sample;
+namespace Navis.WinUI.Sample.Windows;
 
 public sealed partial class MainWindow : Window
 {
     private FrameworkElement? _centeredTitleBarContent;
     private float _originalTitleBarContentTranslationX;
+    public MainWindowViewModel ViewModel { get; }
 
     public MainWindow()
     {
+        ViewModel = App.Current.GetRequiredService<MainWindowViewModel>();
         InitializeComponent();
 
         ExtendsContentIntoTitleBar = true;

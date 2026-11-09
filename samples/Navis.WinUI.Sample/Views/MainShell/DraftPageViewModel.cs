@@ -2,9 +2,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using Navis.WinUI.Abstractions;
-using Navis.WinUI.Sample.Views.MainShell;
 
-namespace Navis.WinUI.Sample.ViewModels.MainShell;
+namespace Navis.WinUI.Sample.Views.MainShell;
 
 internal partial class DraftPageViewModel : ObservableObject, INavigationGuard
 {

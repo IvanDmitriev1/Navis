@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<Page
-    x:Class="Navis.WinUI.Sample.Views.MainShell.ShellPage"
+<UserControl
+    x:Class="Navis.WinUI.Sample.Screens.ShellScreen"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mainShell="using:Navis.WinUI.Sample.Views.MainShell"
@@ -54,4 +54,4 @@
             </nav:TitleBarNavigation.PersistentContent>
         </Frame>
     </NavigationView>
-</Page>
+</UserControl>

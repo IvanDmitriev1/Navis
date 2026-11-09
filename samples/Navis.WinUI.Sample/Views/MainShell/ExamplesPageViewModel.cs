@@ -3,9 +3,8 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using Navis.WinUI.Abstractions;
 using Navis.WinUI.Sample.Models;
-using Navis.WinUI.Sample.Views.MainShell;
 
-namespace Navis.WinUI.Sample.ViewModels.MainShell;
+namespace Navis.WinUI.Sample.Views.MainShell;
 
 public partial class ExamplesPageViewModel : ObservableObject
 {

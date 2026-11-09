@@ -2,8 +2,10 @@ using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
+using CommunityToolkit.Mvvm.Messaging;
 using Navis.WinUI.Extensions;
-using Navis.WinUI.Sample.ViewModels.MainShell;
+using Navis.WinUI.Sample.Windows;
+using Navis.WinUI.Sample.Views.MainShell;
 
 namespace Navis.WinUI.Sample;
 
@@ -24,7 +26,8 @@ public partial class App : Application, IServiceProvider
 
         _serviceProvider = new ServiceCollection()
             .AddNavisNavigation()
-            .AddTransient<ShellViewModel>()
+            .AddSingleton<IMessenger>(_ => new WeakReferenceMessenger())
+            .AddSingleton<MainWindowViewModel>()
             .AddTransient<OverviewPageViewModel>()
             .AddTransient<ExamplesPageViewModel>()
             .AddTransient<ExampleDetailsPageViewModel>()
@@ -42,6 +45,7 @@ public partial class App : Application, IServiceProvider
     public void HandleActivation(AppActivationArguments args)
     {
         _window = new MainWindow();
+        _serviceProvider.GetRequiredService<MainWindowViewModel>().ShowShellCommand.Execute(null);
         _window.Activate();
     }
 

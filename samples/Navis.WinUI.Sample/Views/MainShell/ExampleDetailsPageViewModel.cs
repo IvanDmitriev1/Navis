@@ -2,7 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using Navis.WinUI.Abstractions;
 using Navis.WinUI.Sample.Models;
 
-namespace Navis.WinUI.Sample.ViewModels.MainShell;
+namespace Navis.WinUI.Sample.Views.MainShell;
 
 public partial class ExampleDetailsPageViewModel : ObservableObject, INavigationAware<NavigationParameterExample>, INavigationAware
 {

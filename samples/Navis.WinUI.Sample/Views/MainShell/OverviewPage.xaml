@@ -5,7 +5,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mainShell="using:Navis.WinUI.Sample.Views.MainShell"
     xmlns:nav="using:Navis.WinUI"
-    xmlns:views="using:Navis.WinUI.Sample.Views"
     NavigationCacheMode="Required">
 
     <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
@@ -25,7 +24,7 @@
             <Border Padding="20" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                 <StackPanel Spacing="12">
                     <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Navigation capabilities" />
-                    <TextBlock Text="The shell combines a root frame, a child content frame, a synchronized NavigationView, and title-bar navigation." TextWrapping="Wrap" />
+                    <TextBlock Text="The shell combines its page frame, a synchronized NavigationView, and title-bar navigation." TextWrapping="Wrap" />
                     <TextBlock Text="The next examples will demonstrate declarative routes, typed parameters, guards, and parent or root navigation." TextWrapping="Wrap" />
                 </StackPanel>
             </Border>
@@ -51,12 +50,11 @@
             <Border Padding="20" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                 <StackPanel Spacing="12">
                     <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Parent and root navigation" />
-                    <TextBlock Text="Open a standalone page in the window's root frame, then return with a root reset to restore a clean shell journal." TextWrapping="Wrap" />
+                    <TextBlock Text="Open a standalone screen in the window content, then return to a fresh shell with a clean page frame journal." TextWrapping="Wrap" />
                     <Button
-                        nav:Navigate.Target="Parent"
-                        nav:Navigate.To="{nav:XamlType TypeName=views:StandalonePage}"
                         AutomationProperties.AutomationId="OverviewStandaloneButton"
                         AutomationProperties.Name="Open standalone page"
+                        Command="{x:Bind ViewModel.OpenStandaloneCommand}"
                         Content="Open Standalone Page" />
                 </StackPanel>
             </Border>
