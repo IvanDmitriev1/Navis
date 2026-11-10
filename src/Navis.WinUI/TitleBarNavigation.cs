@@ -6,7 +6,9 @@ namespace Navis.WinUI;
 [AttachedDependencyProperty<bool, NavigationView>("IsPaneTarget")]
 [AttachedDependencyProperty<bool, Frame>("IsBackTarget")]
 [AttachedDependencyProperty<UIElement, Page>("Content")]
+[AttachedDependencyProperty<UIElement, Page>("RightHeader")]
 [AttachedDependencyProperty<UIElement, Frame>("PersistentContent")]
+[AttachedDependencyProperty<UIElement, Frame>("PersistentRightHeader")]
 public static partial class TitleBarNavigation
 {
     private sealed class NavigationState
@@ -54,6 +56,21 @@ public static partial class TitleBarNavigation
     }
 
     static partial void OnPersistentContentChanged(Frame frame, UIElement? newValue)
+    {
+        if (GetState(frame) is { } state &&
+            ReferenceEquals(state.BackTarget, frame))
+        {
+            Refresh(state);
+        }
+    }
+
+    static partial void OnRightHeaderChanged(Page page, UIElement? oldValue, UIElement? newValue)
+    {
+        if (GetState(page) is { } state && ReferenceEquals(state.BackTarget?.Content, page))
+            Refresh(state);
+    }
+
+    static partial void OnPersistentRightHeaderChanged(Frame frame, UIElement? newValue)
     {
         if (GetState(frame) is { } state &&
             ReferenceEquals(state.BackTarget, frame))
@@ -171,6 +188,7 @@ public static partial class TitleBarNavigation
                 titleBar.IsBackButtonEnabled = false;
                 titleBar.IsPaneToggleButtonVisible = false;
                 titleBar.Content = null;
+                titleBar.RightHeader = null;
                 break;
 
             case NavigationView navigationView:
@@ -312,17 +330,27 @@ public static partial class TitleBarNavigation
         if (state.BackTarget is not { } frame)
         {
             titleBar.Content = null;
+            titleBar.RightHeader = null;
             return;
         }
 
         var page = frame.Content as Page;
         var pageContent = page is null ? null : GetContent(page);
+        var pageRightHeader = page is null ? null : GetRightHeader(page);
 
         titleBar.Content = pageContent ?? GetPersistentContent(frame);
+        titleBar.RightHeader = pageRightHeader ?? GetPersistentRightHeader(frame);
 
         if (titleBar.Content is FrameworkElement contentElement)
         {
             contentElement.DataContext = pageContent is not null
+                ? page?.DataContext
+                : frame.DataContext;
+        }
+
+        if (titleBar.RightHeader is FrameworkElement rightHeaderElement)
+        {
+            rightHeaderElement.DataContext = pageRightHeader is not null
                 ? page?.DataContext
                 : frame.DataContext;
         }

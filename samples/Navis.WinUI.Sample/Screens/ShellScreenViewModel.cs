@@ -14,6 +14,9 @@ public sealed partial class ShellScreenViewModel(INavigation navigation)
         "Navigation guards"
     ];
 
+    [RelayCommand]
+    private void OpenOverview() => navigation.Navigate<OverviewPage>(NavigationKind.Reset);
+
     public void OnSuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
 
     {

@@ -52,6 +52,13 @@
                     PlaceholderText="Search examples"
                     SuggestionChosen="{x:Bind ViewModel.OnSuggestionChosen}" />
             </nav:TitleBarNavigation.PersistentContent>
+            <nav:TitleBarNavigation.PersistentRightHeader>
+                <Button
+                    AutomationProperties.AutomationId="ShellOverviewButton"
+                    AutomationProperties.Name="Open Overview"
+                    Command="{x:Bind ViewModel.OpenOverviewCommand}"
+                    Content="Overview" />
+            </nav:TitleBarNavigation.PersistentRightHeader>
         </Frame>
     </NavigationView>
 </UserControl>
