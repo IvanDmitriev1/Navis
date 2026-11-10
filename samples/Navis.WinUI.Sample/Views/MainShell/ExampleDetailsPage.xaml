@@ -3,7 +3,9 @@
     x:Class="Navis.WinUI.Sample.Views.MainShell.ExampleDetailsPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:nav="using:Navis.WinUI">
+    xmlns:mainShell="using:Navis.WinUI.Sample.Views.MainShell"
+    xmlns:nav="using:Navis.WinUI"
+    nav:NavigationViewProperties.OwnerPage="{nav:XamlType TypeName=mainShell:ExamplesPage}">
 
     <nav:TitleBarNavigation.Content>
         <TextBlock Text="{x:Bind ViewModel.Example.Title, Mode=OneWay}" />

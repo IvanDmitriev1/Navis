@@ -1,6 +1,7 @@
 namespace Navis.WinUI;
 
 [AttachedDependencyProperty<Frame, NavigationView>("Frame")]
+[AttachedDependencyProperty<Type, Page>("OwnerPage")]
 public static partial class NavigationViewProperties
 {
     private static readonly DependencyProperty NavigationViewProperty =
@@ -54,13 +55,32 @@ public static partial class NavigationViewProperties
         if (frame.GetValue(NavigationViewProperty) is not NavigationView navigationView)
             return;
 
-        var selectedItem = navigationView.MenuItems
-            .Cast<NavigationViewItemBase>()
-            .FirstOrDefault(item => Navigate.GetTo(item) == args.SourcePageType);
+        var pageType = args.Content is Page page
+            ? GetOwnerPage(page) ?? args.SourcePageType
+            : args.SourcePageType;
+        var selectedItem = FindNavigationViewItem(navigationView.MenuItems, pageType) ??
+                           FindNavigationViewItem(navigationView.FooterMenuItems, pageType);
 
         if (selectedItem is not null)
         {
             navigationView.SelectedItem = selectedItem;
         }
+    }
+
+    private static NavigationViewItem? FindNavigationViewItem(IEnumerable<object> items, Type pageType)
+    {
+        foreach (var item in items)
+        {
+            if (item is not NavigationViewItem navigationViewItem)
+                continue;
+
+            if (Navigate.GetTo(navigationViewItem) == pageType)
+                return navigationViewItem;
+
+            if (FindNavigationViewItem(navigationViewItem.MenuItems, pageType) is { } nestedItem)
+                return nestedItem;
+        }
+
+        return null;
     }
 }

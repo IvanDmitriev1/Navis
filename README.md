@@ -84,6 +84,19 @@ Parameters can be bound in XAML with `Navigate.Parameter`:
     nav:Navigate.To="{nav:XamlType TypeName=pages:DetailsPage}" />
 ```
 
+For a detail page, set `NavigationViewProperties.OwnerPage` to the page represented by its navigation item. The owner item is selected while the detail page is open, including when the item is nested or in the footer:
+
+```xml
+<Page
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:nav="using:Navis.WinUI"
+    xmlns:pages="using:YourApp.Views"
+    nav:NavigationViewProperties.OwnerPage="{nav:XamlType TypeName=pages:OrdersPage}">
+    <!-- Order details content -->
+</Page>
+```
+
 ## Nested frames
 
 Enable navigation on a child `Frame` inside a page to create a nested host. `Parent` is the direct host, `Child` is the current loaded child host, and `Root` resolves the top-level host. `Navigate`, `CurrentPageType`, and `NavigateForward` stay within the injected host's frame. `CanGoBack` and `NavigateBack` search loaded descendants deepest-first, then use the current frame; using `Root` gives the whole window this back behavior.
