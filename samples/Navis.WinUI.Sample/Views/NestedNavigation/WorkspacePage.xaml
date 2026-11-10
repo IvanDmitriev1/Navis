@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="Navis.WinUI.Sample.Views.NestedNavigation.WorkspacePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:nested="using:Navis.WinUI.Sample.Views.NestedNavigation"
+    xmlns:nav="using:Navis.WinUI"
+    NavigationCacheMode="Required">
+
+    <StackPanel Padding="32,24" Spacing="16">
+        <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="Cached nested workspace" />
+        <TextBlock Text="This page is cached. Its child frame keeps an independent two-page journal while the workspace is away." TextWrapping="Wrap" />
+        <Button Command="{x:Bind ViewModel.LeaveWorkspaceCommand}" Content="Leave workspace for Overview" />
+        <Frame
+            x:Name="WorkspaceFrame"
+            MinHeight="300"
+            nav:NavigationHost.InitialPage="{nav:XamlType TypeName=nested:WorkspaceHomePage}"
+            nav:NavigationHost.IsEnabled="True" />
+    </StackPanel>
+</Page>

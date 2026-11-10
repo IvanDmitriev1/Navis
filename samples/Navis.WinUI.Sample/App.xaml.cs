@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Navis.WinUI.Extensions;
 using Navis.WinUI.Sample.Windows;
 using Navis.WinUI.Sample.Views.MainShell;
+using Navis.WinUI.Sample.Views.NestedNavigation;
 
 namespace Navis.WinUI.Sample;
 
@@ -32,6 +33,9 @@ public partial class App : Application, IServiceProvider
             .AddTransient<ExamplesPageViewModel>()
             .AddTransient<ExampleDetailsPageViewModel>()
             .AddTransient<DraftPageViewModel>()
+            .AddTransient<WorkspacePageViewModel>()
+            .AddTransient<WorkspaceHomePageViewModel>()
+            .AddTransient<WorkspaceDetailsPageViewModel>()
             .BuildServiceProvider();
     }
 

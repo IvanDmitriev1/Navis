@@ -7,23 +7,23 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
     public FrameNavigation(Frame currentFrame, FrameNavigation? parent)
     {
         _currentFrame = currentFrame;
-        _parent = parent;
-
-        _parent?.AttachChild(this);
-
-        _currentFrame.Navigating += CurrentFrameOnNavigating;
-        _currentFrame.Navigated += CurrentFrameOnNavigated;
+        Attach(parent);
     }
 
-    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts = new();
     private readonly Frame _currentFrame;
-    private readonly FrameNavigation? _parent;
+    private FrameNavigation? _parent;
     private FrameNavigation? _child;
     private bool _commitObserved;
     private bool _isCommitting;
     private bool _isNavigating;
+    private bool _hasBeenActivated;
+    private long _operationId;
+    private object? _currentParameter;
 
     public bool IsDisposed { get; private set; }
+    internal bool IsActive { get; private set; }
+    internal event EventHandler? NavigationStateChanged;
 
     public INavigation Root
     {
@@ -39,8 +39,8 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
         }
     }
 
-    public INavigation? Parent => _parent;
-    public INavigation? Child => !IsDisposed && _child is { IsDisposed: false } child ? child : null;
+    public INavigation? Parent => _parent is { IsActive: true, IsDisposed: false } parent ? parent : null;
+    public INavigation? Child => IsActive && !IsDisposed && _child is { IsActive: true, IsDisposed: false } child ? child : null;
 
     public Type? CurrentPageType
     {
@@ -56,7 +56,7 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
         get
         {
             EnsureCanOperate();
-            return _currentFrame.CanGoBack;
+            return FindBackTarget() is not null;
         }
     }
 
@@ -65,8 +65,50 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
         get
         {
             EnsureCanOperate();
-            return _currentFrame.CanGoForward;
+            return IsActive && _currentFrame.CanGoForward;
         }
+    }
+
+    private bool Attach(FrameNavigation? parent)
+    {
+        EnsureUiThread();
+
+        if (IsDisposed)
+            throw new ObjectDisposedException(nameof(FrameNavigation));
+
+        if (IsActive)
+        {
+            if (ReferenceEquals(_parent, parent))
+                return false;
+
+            DetachFromParent();
+            AttachToParent(parent);
+            RaiseNavigationStateChanged();
+            return false;
+        }
+
+        AttachToParent(parent);
+        if (_hasBeenActivated)
+            _cts = new CancellationTokenSource();
+        IsActive = true;
+        _currentFrame.Navigating += CurrentFrameOnNavigating;
+        _currentFrame.Navigated += CurrentFrameOnNavigated;
+
+        bool isRestored = _hasBeenActivated;
+        _hasBeenActivated = true;
+        RaiseNavigationStateChanged();
+        return isRestored;
+    }
+
+    internal async ValueTask ActivateAsync(FrameNavigation? parent, Func<ValueTask> reconnectChildren)
+    {
+        bool restored = Attach(parent);
+        CancellationToken token = _cts.Token;
+
+        await reconnectChildren();
+
+        if (restored && IsActive && !token.IsCancellationRequested && _currentFrame.Content is { } content)
+            await content.NotifyNavigatedToAsync(_currentParameter, token);
     }
 
     public async ValueTask DisposeAsync()
@@ -77,24 +119,39 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
             return;
 
         IsDisposed = true;
-        _parent?.DetachChild(this);
+        DetachChildAsRoot();
+        await DeactivateAsync();
+        DetachFromParent();
+        _cts.Dispose();
+        RaiseNavigationStateChanged();
+    }
 
+    internal async ValueTask DeactivateAsync()
+    {
+        EnsureUiThread();
+
+        if (!IsActive)
+            return;
+
+        IsActive = false;
+        _operationId++;
+        _isNavigating = false;
         _currentFrame.Navigating -= CurrentFrameOnNavigating;
         _currentFrame.Navigated -= CurrentFrameOnNavigated;
-
-        _cts.Cancel();
+        var cancellation = _cts;
+        cancellation.Cancel();
+        DetachFromParent();
+        RaiseNavigationStateChanged();
 
         try
         {
             var target = _currentFrame.GetNavigationTarget();
             if (target is INavigationLeavingAware navigationAware)
-            {
                 await navigationAware.OnNavigatedFromAsync(CancellationToken.None);
-            }
         }
         finally
         {
-            _cts.Dispose();
+            cancellation.Dispose();
         }
     }
 
@@ -108,10 +165,12 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
 
     public void NavigateBack()
     {
-        if (!_currentFrame.CanGoBack)
+        EnsureCanOperate();
+        var target = FindBackTarget();
+        if (target is null)
             throw new InvalidOperationException("Cannot navigate back because there is no page in the back stack.");
 
-        _ = StartJournalNavigation(NavigationMode.Back);
+        _ = target.StartJournalNavigation(NavigationMode.Back);
     }
 
     public void NavigateForward()
@@ -130,7 +189,14 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
 
     private void AttachChild(FrameNavigation child)
     {
+        if (_child is { IsActive: true, IsDisposed: false } current && !ReferenceEquals(current, child))
+        {
+            throw new InvalidOperationException(
+                "A navigation host can have only one active child frame.");
+        }
+
         _child = child;
+        RaiseNavigationStateChanged();
     }
 
     private void DetachChild(FrameNavigation child)
@@ -138,34 +204,83 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
         if (ReferenceEquals(_child, child))
         {
             _child = null;
+            RaiseNavigationStateChanged();
         }
+    }
+
+    private void AttachToParent(FrameNavigation? parent)
+    {
+        parent?.AttachChild(this);
+        _parent = parent;
+    }
+
+    private void DetachFromParent()
+    {
+        var parent = _parent;
+        _parent = null;
+        parent?.DetachChild(this);
+    }
+
+    private void DetachChildAsRoot()
+    {
+        var child = _child;
+        _child = null;
+
+        if (child is null || !ReferenceEquals(child._parent, this))
+            return;
+
+        child._parent = null;
+        child.RaiseNavigationStateChanged();
+        if (child is { IsActive: true, _currentFrame.IsLoaded: true })
+            NavigationRootRegistry.Register(child._currentFrame);
+    }
+
+    private FrameNavigation? FindBackTarget()
+    {
+        if (!IsActive || !_currentFrame.IsLoaded)
+            return null;
+
+        return (_child is { IsActive: true, IsDisposed: false } child
+                   ? child.FindBackTarget()
+                   : null) ?? (_currentFrame.CanGoBack ? this : null);
+    }
+
+    private void RaiseNavigationStateChanged()
+    {
+        NavigationStateChanged?.Invoke(this, EventArgs.Empty);
+        _parent?.RaiseNavigationStateChanged();
     }
 
     private async Task StartNavigation(Type pageType, object? parameter, NavigationKind kind)
     {
         EnsureCanOperate();
 
-        if (_isNavigating)
+        if (!IsActive || _isNavigating)
             return;
 
         _isNavigating = true;
+        long operationId = ++_operationId;
+        CancellationToken token = _cts.Token;
 
         try
         {
             var source = _currentFrame.GetNavigationTarget();
 
-            if (!await CanNavigate())
+            if (!await CanNavigate(token) || token.IsCancellationRequested || !IsActive)
                 return;
 
             if (!NavigateTo(pageType, parameter, kind))
                 return;
 
+            _currentParameter = parameter;
+            RaiseNavigationStateChanged();
             var destination = _currentFrame.Content;
-            await NotifyNavigationAsync(source, destination, parameter);
+            await NotifyNavigationAsync(source, destination, parameter, token);
         }
         finally
         {
-            _isNavigating = false;
+            if (_operationId == operationId)
+                _isNavigating = false;
         }
     }
 
@@ -173,16 +288,21 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
     {
         EnsureCanOperate();
 
-        if (_isNavigating)
+        if (!IsActive || _isNavigating)
             return;
 
         _isNavigating = true;
+        long operationId = ++_operationId;
+        CancellationToken token = _cts.Token;
 
         try
         {
             var source = _currentFrame.GetNavigationTarget();
 
-            if (!await CanNavigate())
+            if (!await CanNavigate(token) || token.IsCancellationRequested || !IsActive)
+                return;
+
+            if (mode == NavigationMode.Back ? !_currentFrame.CanGoBack : !_currentFrame.CanGoForward)
                 return;
 
             var parameter = mode switch
@@ -218,23 +338,29 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
             if (!_commitObserved)
                 return;
 
+            _currentParameter = parameter;
+            RaiseNavigationStateChanged();
             var destination = _currentFrame.Content;
-            await NotifyNavigationAsync(source, destination, parameter);
+            await NotifyNavigationAsync(source, destination, parameter, token);
         }
         finally
         {
-            _isNavigating = false;
+            if (_operationId == operationId)
+                _isNavigating = false;
         }
     }
 
-    private async Task<bool> CanNavigate()
+    private async Task<bool> CanNavigate(CancellationToken token)
     {
-        if (_child is not null && !await _child.CanNavigate())
+        if (!IsActive || token.IsCancellationRequested)
+            return false;
+
+        if (Child is FrameNavigation child && !await child.CanNavigate(child._cts.Token))
         {
             return false;
         }
 
-        return await _currentFrame.CanNavigate(_cts.Token);
+        return IsActive && !token.IsCancellationRequested && await _currentFrame.CanNavigate(token);
     }
 
     private bool NavigateTo(Type pageType, object? parameter, NavigationKind kind)
@@ -294,17 +420,22 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
         return true;
     }
 
-    private async Task NotifyNavigationAsync(object? source, object? destination, object? parameter)
+    private async Task NotifyNavigationAsync(
+        object? source,
+        object? destination,
+        object? parameter,
+        CancellationToken token)
     {
         if (destination is not FrameworkElement { DataContext: { } destinationDataContext })
             return;
 
         if (!ReferenceEquals(source, destinationDataContext) && source is INavigationLeavingAware sourceAware)
         {
-            await sourceAware.OnNavigatedFromAsync(_cts.Token);
+            await sourceAware.OnNavigatedFromAsync(token);
         }
 
-        await destination.NotifyNavigatedToAsync(parameter, _cts.Token);
+        if (!token.IsCancellationRequested && IsActive && ReferenceEquals(_currentFrame.Content, destination))
+            await destination.NotifyNavigatedToAsync(parameter, token);
     }
 
     private void CurrentFrameOnNavigating(object sender, NavigatingCancelEventArgs e)
@@ -317,10 +448,14 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
         if (_isCommitting)
         {
             _commitObserved = true;
+            _currentParameter = e.Parameter;
             return;
         }
 
-        await e.NotifyNavigatedToAsync(_cts.Token);
+        _currentParameter = e.Parameter;
+        RaiseNavigationStateChanged();
+        CancellationToken token = _cts.Token;
+        await e.NotifyNavigatedToAsync(token);
     }
 
     private void EnsureCanOperate()

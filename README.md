@@ -84,6 +84,28 @@ Parameters can be bound in XAML with `Navigate.Parameter`:
     nav:Navigate.To="{nav:XamlType TypeName=pages:DetailsPage}" />
 ```
 
+## Nested frames
+
+Enable navigation on a child `Frame` inside a page to create a nested host. `Parent` is the direct host, `Child` is the current loaded child host, and `Root` resolves the top-level host. `Navigate`, `CurrentPageType`, and `NavigateForward` stay within the injected host's frame. `CanGoBack` and `NavigateBack` search loaded descendants deepest-first, then use the current frame; using `Root` gives the whole window this back behavior.
+
+To preserve the child page and its journal when the outer frame leaves the container page, cache that page:
+
+```xml
+<Page
+    x:Class="YourApp.Views.WorkspacePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:nav="using:Navis.WinUI"
+    xmlns:pages="using:YourApp.Views"
+    NavigationCacheMode="Required">
+    <Frame
+        nav:NavigationHost.IsEnabled="True"
+        nav:NavigationHost.InitialPage="{nav:XamlType TypeName=pages:WorkspaceHomePage}" />
+</Page>
+```
+
+Attach `TitleBarNavigation.IsBackTarget` only to the outer frame. Its title bar then reflects child history and invokes the same deepest-first back behavior.
+
 ## Caveats
 
 - `INavigation` resolved during page activation is bound to that frame. Deferred instances used outside activation require exactly one loaded, enabled root frame on the calling UI thread; zero or multiple roots throw. Deferred instances do not capture a frame, queue operations, or dispatch to another UI thread.

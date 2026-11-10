@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mainShell="using:Navis.WinUI.Sample.Views.MainShell"
+    xmlns:nested="using:Navis.WinUI.Sample.Views.NestedNavigation"
     xmlns:nav="using:Navis.WinUI"
     NavigationCacheMode="Required">
 
@@ -44,6 +45,16 @@
                         AutomationProperties.AutomationId="OverviewFeaturedExampleButton"
                         AutomationProperties.Name="Open featured example"
                         Content="Open Featured Example" />
+                </StackPanel>
+            </Border>
+
+            <Border Padding="20" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel Spacing="12">
+                    <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Nested frame history" />
+                    <TextBlock Text="Open the nested workspace, navigate inside it, then use the title-bar back button. Back visits the inner history before leaving the workspace. Leave and return to see the inner page restored." TextWrapping="Wrap" />
+                    <Button
+                        nav:Navigate.To="{nav:XamlType TypeName=nested:WorkspacePage}"
+                        Content="Open nested workspace" />
                 </StackPanel>
             </Border>
 

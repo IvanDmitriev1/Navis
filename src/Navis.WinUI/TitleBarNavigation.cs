@@ -1,3 +1,5 @@
+using Navis.WinUI.Internal;
+
 namespace Navis.WinUI;
 
 [AttachedDependencyProperty<bool, TitleBar>("IsHost")]
@@ -14,6 +16,12 @@ public static partial class TitleBarNavigation
         public NavigationView? PaneTarget { get; set; }
 
         public Frame? BackTarget { get; set; }
+
+        public FrameNavigation? BackNavigation { get; set; }
+
+        public long? BackNavigationInstanceCallbackToken { get; set; }
+
+        public EventHandler? BackNavigationStateChangedHandler { get; set; }
     }
 
     private static readonly DependencyProperty StateProperty =
@@ -132,8 +140,10 @@ public static partial class TitleBarNavigation
             case Frame frame:
                 EnsureAvailable(state.BackTarget, frame, "back target");
                 state.BackTarget = frame;
-                frame.Navigated -= OnFrameNavigated;
-                frame.Navigated += OnFrameNavigated;
+                state.BackNavigationInstanceCallbackToken = frame.RegisterPropertyChangedCallback(
+                    NavigationHost.InstanceProperty,
+                    OnBackNavigationInstanceChanged);
+                AttachNavigation(state, frame.GetValue(NavigationHost.InstanceProperty) as FrameNavigation);
                 break;
 
             default:
@@ -173,10 +183,17 @@ public static partial class TitleBarNavigation
                 break;
 
             case Frame frame:
-                frame.Navigated -= OnFrameNavigated;
+                if (state?.BackNavigationInstanceCallbackToken is { } token)
+                {
+                    frame.UnregisterPropertyChangedCallback(NavigationHost.InstanceProperty, token);
+                    state.BackNavigationInstanceCallbackToken = null;
+                }
 
-                if (ReferenceEquals(state?.BackTarget, frame))
+                if (state is not null && ReferenceEquals(state.BackTarget, frame))
+                {
+                    DetachNavigation(state);
                     state.BackTarget = null;
+                }
 
                 break;
         }
@@ -217,12 +234,12 @@ public static partial class TitleBarNavigation
     private static void OnBackRequested(TitleBar sender, object args)
     {
         if (sender.GetValue(RegisteredStateProperty) is not NavigationState state ||
-            state.BackTarget is not { CanGoBack: true } frame)
+            state.BackNavigation is not { IsActive: true, IsDisposed: false, CanGoBack: true } navigation)
         {
             return;
         }
 
-        NavigationHost.GetFrameNavigationInstance(frame).NavigateBack();
+        navigation.NavigateBack();
     }
 
     private static void OnPaneToggleRequested(TitleBar sender, object args)
@@ -237,10 +254,48 @@ public static partial class TitleBarNavigation
             Refresh(state);
     }
 
-    private static void OnFrameNavigated(object sender, NavigationEventArgs args)
+    private static void OnBackNavigationInstanceChanged(DependencyObject sender, DependencyProperty property)
     {
-        if (((Frame)sender).GetValue(RegisteredStateProperty) is NavigationState state)
+        if (sender is Frame frame && frame.GetValue(RegisteredStateProperty) is NavigationState state)
+            AttachNavigation(state, frame.GetValue(NavigationHost.InstanceProperty) as FrameNavigation);
+    }
+
+    private static void OnNavigationStateChanged(NavigationState state, FrameNavigation navigation)
+    {
+        if (navigation.IsDisposed)
+            DetachNavigation(state);
+
+        Refresh(state);
+    }
+
+    private static void AttachNavigation(NavigationState state, FrameNavigation? navigation)
+    {
+        if (ReferenceEquals(state.BackNavigation, navigation))
+        {
             Refresh(state);
+            return;
+        }
+
+        DetachNavigation(state);
+        state.BackNavigation = navigation;
+
+        if (navigation is not null)
+        {
+            EventHandler handler = (_, _) => OnNavigationStateChanged(state, navigation);
+            state.BackNavigationStateChangedHandler = handler;
+            navigation.NavigationStateChanged += handler;
+        }
+
+        Refresh(state);
+    }
+
+    private static void DetachNavigation(NavigationState state)
+    {
+        if (state.BackNavigation is { } navigation && state.BackNavigationStateChangedHandler is { } handler)
+            navigation.NavigationStateChanged -= handler;
+
+        state.BackNavigation = null;
+        state.BackNavigationStateChangedHandler = null;
     }
 
     private static void Refresh(NavigationState state)
@@ -250,7 +305,7 @@ public static partial class TitleBarNavigation
 
         titleBar.IsPaneToggleButtonVisible = state.PaneTarget is { PaneDisplayMode: not NavigationViewPaneDisplayMode.Top };
 
-        var canGoBack = state.BackTarget?.CanGoBack == true;
+        var canGoBack = state.BackNavigation is { IsActive: true, IsDisposed: false, CanGoBack: true };
         titleBar.IsBackButtonVisible = canGoBack;
         titleBar.IsBackButtonEnabled = canGoBack;
 
