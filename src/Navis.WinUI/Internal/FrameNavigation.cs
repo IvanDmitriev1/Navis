@@ -8,6 +8,7 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
     {
         _currentFrame = currentFrame;
         Attach(parent);
+        _hasBeenActivated = false;
     }
 
     private CancellationTokenSource _cts = new();
@@ -20,6 +21,9 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
     private bool _hasBeenActivated;
     private long _operationId;
     private object? _currentParameter;
+    private readonly record struct PendingNavigation(Type PageType, object? Parameter, NavigationKind Kind);
+
+    private PendingNavigation? _pendingNavigation;
 
     public bool IsDisposed { get; private set; }
     internal bool IsActive { get; private set; }
@@ -79,7 +83,10 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
         if (IsActive)
         {
             if (ReferenceEquals(_parent, parent))
+            {
+                _hasBeenActivated = true;
                 return false;
+            }
 
             DetachFromParent();
             AttachToParent(parent);
@@ -100,15 +107,24 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
         return isRestored;
     }
 
-    internal async ValueTask ActivateAsync(FrameNavigation? parent, Func<ValueTask> reconnectChildren)
+    internal async ValueTask<bool> ActivateAsync(FrameNavigation? parent, Func<ValueTask> reconnectChildren)
     {
         bool restored = Attach(parent);
         CancellationToken token = _cts.Token;
+        var pendingNavigation = !restored ? _pendingNavigation : null;
+        if (pendingNavigation is not null)
+            _pendingNavigation = null;
 
         await reconnectChildren();
 
+        bool hadPendingNavigation = pendingNavigation is not null;
+        if (pendingNavigation is { } pending && IsActive && !token.IsCancellationRequested)
+            await StartNavigation(pending.PageType, pending.Parameter, pending.Kind);
+
         if (restored && IsActive && !token.IsCancellationRequested && _currentFrame.Content is { } content)
             await content.NotifyNavigatedToAsync(_currentParameter, token);
+
+        return hadPendingNavigation;
     }
 
     public async ValueTask DisposeAsync()
@@ -119,6 +135,7 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
             return;
 
         IsDisposed = true;
+        _pendingNavigation = null;
         DetachChildAsRoot();
         await DeactivateAsync();
         DetachFromParent();
@@ -255,7 +272,18 @@ internal sealed class FrameNavigation : INavigation, IAsyncDisposable
     {
         EnsureCanOperate();
 
-        if (!IsActive || _isNavigating)
+        if (!_hasBeenActivated)
+        {
+            _pendingNavigation = new PendingNavigation(pageType, parameter, kind);
+            return;
+        }
+
+        if (!IsActive)
+        {
+            return;
+        }
+
+        if (_isNavigating)
             return;
 
         _isNavigating = true;

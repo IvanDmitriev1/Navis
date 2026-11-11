@@ -7,6 +7,14 @@ namespace Navis.WinUI;
 [AttachedDependencyProperty<Type, Frame>("InitialPage")]
 public static partial class NavigationHost
 {
+    public static INavigation GetNavigation(Frame frame)
+    {
+        if (!frame.DispatcherQueue.HasThreadAccess)
+            throw new InvalidOperationException("Frame navigation must be used from the frame's UI thread.");
+
+        return GetFrameNavigationInstance(frame);
+    }
+
     internal static readonly DependencyProperty InstanceProperty =
         DependencyProperty.RegisterAttached(
             "Instance",
@@ -23,7 +31,6 @@ public static partial class NavigationHost
             return instance;
 
         FrameNavigation? parentNavigation = GetParentNavigation(frame);
-
         instance = new FrameNavigation(frame, parentNavigation);
         frame.SetValue(InstanceProperty, instance);
 
@@ -111,13 +118,14 @@ public static partial class NavigationHost
     {
         var navigation = GetFrameNavigationInstance(frame);
         var parentNavigation = GetParentNavigation(frame);
-        await navigation.ActivateAsync(parentNavigation, async () =>
+        bool hadPendingNavigation = await navigation.ActivateAsync(parentNavigation, async () =>
         {
             NavigationRootRegistry.Register(frame);
             await ReattachLoadedChildAsync(frame, navigation);
         });
 
-        if (frame.Content is not null)
+        if (!GetIsEnabled(frame) || frame.GetValue(InstanceProperty) is not FrameNavigation current ||
+            !ReferenceEquals(current, navigation) || hadPendingNavigation || frame.Content is not null)
             return;
 
         var initialPage = GetInitialPage(frame);
