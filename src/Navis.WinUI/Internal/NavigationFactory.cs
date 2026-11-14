@@ -3,7 +3,8 @@ namespace Navis.WinUI.Internal;
 internal static class NavigationFactory
 {
     public static INavigation Create() =>
-        NavigatorActivation.TryGetCurrentFrame(out var currentFrame)
+        // The frame owns its navigator. DI receives a non-disposable proxy.
+        new DeferredNavigation(NavigatorActivation.TryGetCurrentFrame(out var currentFrame)
             ? NavigationHost.GetFrameNavigationInstance(currentFrame!)
-            : new DeferredNavigation();
+            : null);
 }

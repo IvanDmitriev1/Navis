@@ -1,8 +1,8 @@
 namespace Navis.WinUI.Internal;
 
-internal sealed class DeferredNavigation : INavigation
+internal sealed class DeferredNavigation(FrameNavigation? navigation) : INavigation
 {
-    private static FrameNavigation Resolve() => NavigationRootRegistry.Resolve();
+    private FrameNavigation Resolve() => navigation ?? NavigationRootRegistry.Resolve();
 
     public INavigation Root => Resolve().Root;
     public INavigation? Parent => Resolve().Parent;
